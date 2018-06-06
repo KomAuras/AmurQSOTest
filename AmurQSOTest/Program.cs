@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AmurQSOTest
 {
@@ -10,6 +6,14 @@ namespace AmurQSOTest
     {
         static void Main(string[] args)
         {
+            Config.SetArgs(args);
+            Manager manager = new Manager();
+            manager.Run();
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                Console.WriteLine("================= END ==================");
+                Console.ReadKey();
+            }
         }
     }
 }
