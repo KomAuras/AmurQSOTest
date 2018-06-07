@@ -43,7 +43,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config.cs" />
+    <Compile Include="Items\ContestFolder.cs" />
     <Compile Include="INIFile.cs" />
+    <Compile Include="Items\BandPoint.cs" />
+    <Compile Include="Items\ContestFile.cs" />
+    <Compile Include="Items\ContestFolders.cs" />
+    <Compile Include="Items\FolderConfig.cs" />
+    <Compile Include="Items\Period.cs" />
+    <Compile Include="Items\QSO.cs" />
+    <Compile Include="Items\QSOCounters.cs" />
+    <Compile Include="Items\RawQSO.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Program.cs" />

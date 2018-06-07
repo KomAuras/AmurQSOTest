@@ -1,19 +1,19 @@
-﻿using System;
+﻿using AmurQSOTest.Items;
+using System;
+using System.Collections.Generic;
 
 namespace AmurQSOTest
 {
     public class Manager
     {
-        private const string Title = "AmurQSOTest ver 1.0";
+        private ContestFolders Folders;
 
         public void Run()
         {
-            Console.WriteLine(Title);
-            if (Config.Load()) {
-                Console.WriteLine("Не задана папка с соревнованием!");
-                return;
-            }
+            Config.Load();
             Config.Dump();
+            Folders = new ContestFolders(Config.ContestFolders);
+            Folders.Load();
         }
     }
 }
