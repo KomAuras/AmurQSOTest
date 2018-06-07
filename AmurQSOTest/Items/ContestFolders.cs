@@ -30,7 +30,31 @@ namespace AmurQSOTest.Items
         {
             foreach (ContestFolder f in this)
             {
+                Console.WriteLine("\nКаталог: " + f.cfg.Name);
                 f.Load();
+                Console.WriteLine("Обработано: " + f.Files.Count);
+            }
+        }
+
+        /// <summary>
+        /// выполнить расчет
+        /// </summary>
+        public void Calculate()
+        {
+            foreach (ContestFolder f in this)
+            {
+                f.Calculate();
+            }
+        }
+
+        /// <summary>
+        /// выполнить запись UBN и т.д.
+        /// </summary>
+        public void Save()
+        {
+            foreach (ContestFolder f in this)
+            {
+                f.Save();
             }
         }
     }

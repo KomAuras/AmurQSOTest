@@ -1,14 +1,15 @@
-﻿using System;
+﻿using AmurQSOTest.Items;
+using System;
 
 namespace AmurQSOTest
 {
     class Program
     {
-        private const string Title = "AmurQSOTest ver 1.0";
         static void Main(string[] args)
         {
             if (Config.SetArgs(args)) { return; }
-            Console.WriteLine(Title);
+            Standards.Build();
+            Console.WriteLine(Config.ProgrammTitle);
             Manager manager = new Manager();
             manager.Run();
             if (System.Diagnostics.Debugger.IsAttached)

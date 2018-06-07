@@ -11,6 +11,10 @@ namespace AmurQSOTest
     public static class Config
     {
         /// <summary>
+        /// заголовок программы
+        /// </summary>
+        public const string ProgrammTitle = "AmurQSOTest ver 1.0";
+        /// <summary>
         /// периоды времени теста
         /// </summary>        
         public static List<Period> ContestPeriod = new List<Period>();
@@ -23,18 +27,18 @@ namespace AmurQSOTest
         /// </summary>
         public static List<FolderConfig> ContestFolders = new List<FolderConfig>();
 
-        private static string[] args;
-        private static string folder_check;
-        private static string folder_ubn;
-        private static string folder_report;
-        private static int subtour_min;
-        private static int offset_min;
-        private static int repeat_call;
-        private static int double_check;
-        private static int rst_check;
-        private static int band_changes;
-        private static int control;
+        public static string folder_check;
+        public static string folder_ubn;
+        public static string folder_report;
+        public static int subtour_min;
+        public static int offset_min;
+        public static int repeat_call;
+        public static int double_check;
+        public static int rst_check;
+        public static int band_changes;
+        public static int control;
 
+        private static string[] args;
         private static FolderConfig temp_folder;
 
         /// <summary>
@@ -73,14 +77,14 @@ namespace AmurQSOTest
         private static void ParseLine(string s)
         {
             // списки
-            if (CheckLine(s, "period"))
+            if (Util.StrExists(s, "period"))
             {
                 string[] data = s.Substring(s.IndexOf('=') + 1).Split(',');
                 if (data.Count() != 2)
                     throw new Exception("Ошибка в периоде!");
                 ContestPeriod.Add(new Period(DateTime.ParseExact(data[0].TrimStart(), "yyyy-MM-dd HHmm", CultureInfo.InvariantCulture), DateTime.ParseExact(data[1].TrimStart(), "yyyy-MM-dd HHmm", CultureInfo.InvariantCulture)));
             }
-            if (CheckLine(s, "band"))
+            if (Util.StrExists(s, "band"))
             {
                 string[] data = s.Substring(s.IndexOf('=') + 1).Split(',');
                 if (data.Count() != 2)
@@ -89,16 +93,16 @@ namespace AmurQSOTest
             }
 
             // папки 
-            if (CheckLine(s, "name"))
+            if (Util.StrExists(s, "name"))
             {
                 AddFolderIfPrepared();
                 temp_folder = new FolderConfig(s.Substring(s.IndexOf('=') + 1).Trim());
-            }else if (CheckLine(s, "desc"))
+            }else if (Util.StrExists(s, "desc"))
             {
                 if (temp_folder != null)
                     temp_folder.Desc = s.Substring(s.IndexOf('=') + 1).Trim();
             }
-            else if (CheckLine(s, "freq"))
+            else if (Util.StrExists(s, "freq"))
             {
                 if (temp_folder != null)
                 {
@@ -109,7 +113,7 @@ namespace AmurQSOTest
                     }
                 }
             }
-            else if (CheckLine(s, "mode"))
+            else if (Util.StrExists(s, "mode"))
             {
                 if (temp_folder != null)
                 {
@@ -126,43 +130,43 @@ namespace AmurQSOTest
             }
 
             // штучные параметры
-            if (CheckLine(s, "folder_check"))
+            if (Util.StrExists(s, "folder_check"))
             {
                 folder_check = s.Substring(s.IndexOf('=') + 1).Trim();
             }
-            if (CheckLine(s, "folder_ubn"))
+            if (Util.StrExists(s, "folder_ubn"))
             {
                 folder_ubn = s.Substring(s.IndexOf('=') + 1).Trim();
             }
-            if (CheckLine(s, "folder_report"))
+            if (Util.StrExists(s, "folder_report"))
             {
                 folder_report = s.Substring(s.IndexOf('=') + 1).Trim();
             }
-            if (CheckLine(s, "subtour_min"))
+            if (Util.StrExists(s, "subtour_min"))
             {
                 subtour_min = Int32.Parse(s.Substring(s.IndexOf('=') + 1));
             }
-            if (CheckLine(s, "offset_min"))
+            if (Util.StrExists(s, "offset_min"))
             {
                 offset_min = Int32.Parse(s.Substring(s.IndexOf('=') + 1));
             }
-            if (CheckLine(s, "repeat_call"))
+            if (Util.StrExists(s, "repeat_call"))
             {
                 repeat_call = Int32.Parse(s.Substring(s.IndexOf('=') + 1));
             }
-            if (CheckLine(s, "double_check"))
+            if (Util.StrExists(s, "double_check"))
             {
                 double_check = Int32.Parse(s.Substring(s.IndexOf('=') + 1));
             }
-            if (CheckLine(s, "rst_check"))
+            if (Util.StrExists(s, "rst_check"))
             {
                 rst_check = Int32.Parse(s.Substring(s.IndexOf('=') + 1));
             }
-            if (CheckLine(s, "band_changes"))
+            if (Util.StrExists(s, "band_changes"))
             {
                 band_changes = Int32.Parse(s.Substring(s.IndexOf('=') + 1));
             }
-            if (CheckLine(s, "control"))
+            if (Util.StrExists(s, "control"))
             {
                 control = Int32.Parse(s.Substring(s.IndexOf('=') + 1));
             }
@@ -175,11 +179,6 @@ namespace AmurQSOTest
                 ContestFolders.Add(temp_folder);
                 temp_folder = null;
             }
-        }
-
-        private static bool CheckLine(string s, string param_name)
-        {
-            return s.ToUpper().TrimStart().Substring(0, param_name.Length) == param_name.ToUpper();
         }
 
         public static bool SetArgs(string[] args)

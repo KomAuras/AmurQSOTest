@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace AmurQSOTest.Items
 {
@@ -17,7 +16,7 @@ namespace AmurQSOTest.Items
         /// <summary>
         /// список файлов для расчета
         /// </summary>
-        public List<ContestFile> Files;
+        public List<ContestFile> Files = new List<ContestFile>();
 
         /// <summary>
         /// создать экземпляр с настройками из Config
@@ -29,7 +28,7 @@ namespace AmurQSOTest.Items
         }
 
         /// <summary>
-        /// загрузить все файлы с данными
+        /// создать экземпляры файлов
         /// </summary>
         public void Load()
         {
@@ -41,27 +40,30 @@ namespace AmurQSOTest.Items
             FileInfo[] Files = d.GetFiles("*.cbr");
             foreach (FileInfo file in Files)
             {
-                StreamReader fs = new StreamReader(file.FullName, Encoding.GetEncoding("windows-1251"));
-                string s = "";
-                while (s != null)
-                {
-                    s = fs.ReadLine();
-                    try
-                    {
-                        ParseLine(s.Trim());
-                    }
-                    catch { }
-                }
+                this.Files.Add(new ContestFile(this, file.FullName));
             }
         }
 
         /// <summary>
-        /// разбор одной строки файла
+        /// расчет по одному файлу
         /// </summary>
-        /// <param name="s"></param>
-        private void ParseLine(string s)
+        public void Calculate()
         {
-            
+            foreach (ContestFile file in this.Files)
+            {
+                file.Calculate();
+            }
+        }
+
+        /// <summary>
+        /// запись ГИТ и т.д. одному файлу
+        /// </summary>
+        public void Save()
+        {
+            foreach (ContestFile file in this.Files)
+            {
+                file.Save();
+            }
         }
     }
 }

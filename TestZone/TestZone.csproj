@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B5B92E8D-191D-46FB-B468-D19B8F06F58B}</ProjectGuid>
+    <ProjectGuid>{F2E7878E-789E-49A2-8A18-FFCCB077C8ED}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>AmurQSOTest</RootNamespace>
-    <AssemblyName>AmurQSOTest</AssemblyName>
+    <RootNamespace>TestZone</RootNamespace>
+    <AssemblyName>TestZone</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -42,27 +42,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config.cs" />
-    <Compile Include="Items\ContestFileHeader.cs" />
-    <Compile Include="Items\ContestFolder.cs" />
-    <Compile Include="INIFile.cs" />
-    <Compile Include="Items\BandPoint.cs" />
-    <Compile Include="Items\ContestFile.cs" />
-    <Compile Include="Items\ContestFolders.cs" />
-    <Compile Include="Items\FolderConfig.cs" />
-    <Compile Include="Items\Period.cs" />
-    <Compile Include="Items\QSO.cs" />
-    <Compile Include="Items\QSOCounters.cs" />
-    <Compile Include="Items\RawQSO.cs" />
-    <Compile Include="Items\Standards.cs" />
-    <Compile Include="Util.cs" />
-    <Compile Include="Manager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

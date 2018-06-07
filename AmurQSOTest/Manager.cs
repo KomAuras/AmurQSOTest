@@ -11,9 +11,11 @@ namespace AmurQSOTest
         public void Run()
         {
             Config.Load();
-            Config.Dump();
+            //Config.Dump();
             Folders = new ContestFolders(Config.ContestFolders);
             Folders.Load();
+            Folders.Calculate();
+            Folders.Save();
         }
     }
 }
