@@ -36,14 +36,11 @@ namespace AmurQSOTest
         /// <returns></returns>
         public static bool StrExists(string s, string param_name)
         {
-            try
-            {
-                return s.ToUpper().TrimStart().Substring(0, param_name.Length) == param_name.ToUpper();
-            }
-            catch
-            {
+            s = s.ToUpper().TrimStart();
+            if (param_name.Length > s.Length) {
                 return false;
             }
+            return s.Substring(0, param_name.Length) == param_name.ToUpper();
         }
 
         /// <summary>
@@ -54,8 +51,7 @@ namespace AmurQSOTest
         /// <returns></returns>
         public static object GetProperty(object target, string property_name)
         {
-            var site = System.Runtime.CompilerServices.CallSite<Func<System.Runtime.CompilerServices.CallSite, object, object>>.Create(Microsoft.CSharp.RuntimeBinder.Binder.GetMember(0, property_name, target.GetType(), new[] { Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfo.Create(0, null) }));
-            return site.Target(site, target);
+            return target.GetType().GetProperty(property_name).GetValue(target, null);
         }
 
         /// <summary>
@@ -66,8 +62,8 @@ namespace AmurQSOTest
         /// <param name="value"></param>
         public static void SetProperty(object target, string property_name, object value)
         {
-            Type type = target.GetType();
-            PropertyInfo prop = type.GetProperty(property_name);
+            //Type type = target.GetType();
+            PropertyInfo prop = (target.GetType()).GetProperty(property_name);
             prop.SetValue(target, value, null);
         }
     }

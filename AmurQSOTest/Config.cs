@@ -37,6 +37,7 @@ namespace AmurQSOTest
         public static int rst_check;
         public static int band_changes;
         public static int control;
+        public static int control_loc;
 
         private static string[] args;
         private static FolderConfig temp_folder;
@@ -62,13 +63,12 @@ namespace AmurQSOTest
                 string s = "";
                 while (s != null)
                 {
-                    s = fs.ReadLine();
-                    try
+                s = fs.ReadLine();
+                    if (s != null && s.Length > 0)
                     {
                         if (s.TrimStart().Substring(0, 1) != ";")
                             ParseLine(s.Substring(0, s.IndexOf(';')).Trim());
                     }
-                    catch { }
                 }
                 AddFolderIfPrepared();
             }
@@ -169,6 +169,10 @@ namespace AmurQSOTest
             if (Util.StrExists(s, "control"))
             {
                 control = Int32.Parse(s.Substring(s.IndexOf('=') + 1));
+            }
+            if (Util.StrExists(s, "control:loc"))
+            {
+                control_loc = Int32.Parse(s.Substring(s.IndexOf('=') + 1));
             }
         }
 

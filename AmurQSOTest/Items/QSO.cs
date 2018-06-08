@@ -42,6 +42,8 @@ namespace AmurQSOTest.Items
         /// </summary>        
         public QSO RecvQSO;
 
+        string[] fields;
+
         /// <summary>
         /// создать экземпляр с парсингом данных из строки
         /// </summary>
@@ -54,24 +56,56 @@ namespace AmurQSOTest.Items
         }
 
         /// <summary>
+        /// проверить локатор в поле
+        /// </summary>
+        /// <param name="sendExch1"></param>
+        /// <param name="v"></param>
+        private void CheckLocator(string sendExch1, string v)
+        {
+            if (Coordinate.ValidateLocator(sendExch1))
+            {
+                Errors.Add("Error in " + v);
+                Counters.ErrorOnCheck = true;
+            }
+        }
+
+        /// <summary>
+        /// получить поле из разобранного массива. позиция поля и имя для ошибки если поле пустое
+        /// </summary>
+        /// <param name="field_position"></param>
+        /// <param name="field_name"></param>
+        /// <returns></returns>
+        private string GetField(int field_position, string field_name)
+        {
+            if (fields.Count() > field_position)
+            {
+                return fields[field_position];
+            }
+            else
+            {
+                if (field_name.Length > 0)
+                {
+                    Errors.Add("Empty " + field_name);
+                    Counters.ErrorOnCheck = true;
+                }
+            }
+            return "";
+        }
+
+        /// <summary>
         /// разобрать строку и выбрать все данные о связи
+        /// <para>0    1     2  3          4    5      6   7   8   9      10  11  12 13</para>    
         /// <para>QSO: 28009 CW 2008-09-23 0711 UA1XYZ 599 001 123 UA2XYZ 599 001 AF 1</para> 
         /// </summary>
         /// <param name="s"></param>
         private void Parse(string s)
         {
-            string[] fields = s.Split(new char[] { ' ', '\t' }).Where(z => z != string.Empty).ToArray();
+            fields = s.Split(new char[] { ' ', '\t' }).Where(z => z != string.Empty).ToArray();
+            int field_position = 0;
 
             // частота
-            try
-            {
-                Raw.Feq = fields[1];
-            }
-            catch
-            {
-                Errors.Add("Empty feq");
-                Counters.ErrorOnCheck = true;
-            }
+            field_position++;
+            Raw.Feq = GetField(field_position, "feq");
             if (!Int32.TryParse(Raw.Feq, out int temp_feq))
             {
                 Errors.Add("Bad feq [" + Raw.Feq + "]");
@@ -85,15 +119,8 @@ namespace AmurQSOTest.Items
             Feq = temp_feq;
 
             // вид работы
-            try
-            {
-                Raw.Mode = fields[2];
-            }
-            catch
-            {
-                Errors.Add("Empty mode");
-                Counters.ErrorOnCheck = true;
-            }
+            field_position++;
+            Raw.Mode = GetField(field_position, "mode");
             if (Standards.Modes.Check(Raw.Mode))
             {
                 Errors.Add("Not specified mode [" + Raw.Mode + "]");
@@ -101,33 +128,11 @@ namespace AmurQSOTest.Items
             }
 
             // дата и время
-            try
-            {
-                Raw.Date = fields[3];
-            }
-            catch
-            {
-                Errors.Add("Empty date");
-                Counters.ErrorOnCheck = true;
-            }
-            try
-            {
-                Raw.Time = fields[4];
-            }
-            catch
-            {
-                Errors.Add("Empty time");
-                Counters.ErrorOnCheck = true;
-            }
-            try
-            {
-                bool t = DateTime.TryParseExact(Raw.Date.Trim() + " " + Raw.Time.Trim(), "yyyy-MM-dd HHmm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime);
-            }
-            catch
-            {
-                Errors.Add("Error on DateTime [" + Raw.Date.Trim() + " " + Raw.Time.Trim() + "]");
-                Counters.ErrorOnCheck = true;
-            }
+            field_position++;
+            Raw.Date = GetField(field_position, "date");
+            field_position++;
+            Raw.Time = GetField(field_position, "time");
+            bool t = DateTime.TryParseExact(Raw.Date.Trim() + " " + Raw.Time.Trim(), "yyyy-MM-dd HHmm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime);
             if (DateTime == DateTime.MinValue)
             {
                 Errors.Add("Not specified DateTime [" + Raw.Date.Trim() + " " + Raw.Time.Trim() + "]");
@@ -135,136 +140,65 @@ namespace AmurQSOTest.Items
             }
 
             // отправленные данные
-            int field_position = 5;
-            try
-            {
-                Raw.SendCall = fields[field_position];
-            }
-            catch
-            {
-                Errors.Add("Empty send call");
-                Counters.ErrorOnCheck = true;
-            }
             field_position++;
-            try
-            {
-                Raw.SendRST = fields[field_position];
-            }
-            catch
-            {
-                Errors.Add("Empty send RST");
-                Counters.ErrorOnCheck = true;
-            }
+            Raw.SendCall = GetField(field_position, "send call");
+            field_position++;
+            Raw.SendRST = GetField(field_position, "send RST");
             if (Config.control > 0)
             {
                 field_position++;
-                try
-                {
-                    Raw.SendExch1 = fields[field_position];
-                }
-                catch
-                {
-                    Errors.Add("Empty send Exch1");
-                    Counters.ErrorOnCheck = true;
-                }
+                Raw.SendExch1 = GetField(field_position, "send Exch1");
+                if (Config.control_loc == 1)
+                    CheckLocator(Raw.SendExch1, "send Locator");
             }
             if (Config.control > 1)
             {
                 field_position++;
-                try
-                {
-                    Raw.SendExch2 = fields[field_position];
-                }
-                catch
-                {
-                    Errors.Add("Empty send Exch2");
-                    Counters.ErrorOnCheck = true;
-                }
+                Raw.SendExch2 = GetField(field_position, "send Exch2");
+                if (Config.control_loc == 2)
+                    CheckLocator(Raw.SendExch1, "send Locator");
             }
             if (Config.control > 2)
             {
                 field_position++;
-                try
-                {
-                    Raw.SendExch3 = fields[field_position];
-                }
-                catch
-                {
-                    Errors.Add("Empty send Exch3");
-                    Counters.ErrorOnCheck = true;
-                }
+                Raw.SendExch3 = GetField(field_position, "send Exch3");
+                if (Config.control_loc == 3)
+                    CheckLocator(Raw.SendExch1, "send Locator");
             }
 
             // принятые данные
             field_position++;
-            try
-            {
-                Raw.RecvCall = fields[field_position];
-            }
-            catch
-            {
-                Errors.Add("Empty recv call");
-                Counters.ErrorOnCheck = true;
-            }
+            Raw.RecvCall = GetField(field_position, "recv call");
             field_position++;
-            try
-            {
-                Raw.RecvRST = fields[field_position];
-            }
-            catch
-            {
-                Errors.Add("Empty recv RST");
-                Counters.ErrorOnCheck = true;
-            }
+            Raw.RecvRST = GetField(field_position, "recv RST");
             if (Config.control > 0)
             {
                 field_position++;
-                try
-                {
-                    Raw.RecvExch1 = fields[field_position];
-                }
-                catch
-                {
-                    Errors.Add("Empty recv Exch1");
-                    Counters.ErrorOnCheck = true;
-                }
+                Raw.RecvExch1 = GetField(field_position, "recv Exch1");
+                if (Config.control_loc == 1)
+                    CheckLocator(Raw.SendExch1, "recv Locator");
             }
             if (Config.control > 1)
             {
                 field_position++;
-                try
-                {
-                    Raw.RecvExch2 = fields[field_position];
-                }
-                catch
-                {
-                    Errors.Add("Empty recv Exch2");
-                    Counters.ErrorOnCheck = true;
-                }
+                Raw.RecvExch2 = GetField(field_position, "recv Exch2");
+                if (Config.control_loc == 2)
+                    CheckLocator(Raw.SendExch1, "recv Locator");
             }
             if (Config.control > 2)
             {
                 field_position++;
-                try
-                {
-                    Raw.RecvExch3 = fields[field_position];
-                }
-                catch
-                {
-                    Errors.Add("Empty recv Exch3");
-                    Counters.ErrorOnCheck = true;
-                }
+                Raw.RecvExch3 = GetField(field_position, "recv Exch3");
+                if (Config.control_loc == 3)
+                    CheckLocator(Raw.SendExch1, "recv Locator");
             }
             field_position++;
-            try
-            {
-                Raw.Mo2t = fields[field_position];
-            }
-            catch { }
+            Raw.Mo2t = GetField(field_position, "");
 
             //if (Counters.ErrorOnCheck)
             //    Folder.Contest.FormatOK = false
         }
+
         public override string ToString()
         {
             string s = string.Format("QSO {0} : {1} {2} {3} {4} {5} {6} ", Raw.Number, Raw.Feq, Raw.Mode, Raw.Date, Raw.Time, Raw.SendCall, Raw.SendRST);

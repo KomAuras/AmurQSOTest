@@ -127,6 +127,7 @@ namespace AmurQSOTest.Items
             }
             foreach (QSO q in items)
             {
+                var ss = q.Raw.GetWidths();
                 foreach (string s in q.Errors)
                 {
                     temp.Add(s);
@@ -154,7 +155,7 @@ namespace AmurQSOTest.Items
             while (s != null)
             {
                 s = fs.ReadLine();
-                if (s != null)
+                if (s != null && s.Length > 0)
                     ParseLine(s.Trim());
             }
         }

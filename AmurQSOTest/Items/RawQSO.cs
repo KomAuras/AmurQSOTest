@@ -1,4 +1,8 @@
-﻿namespace AmurQSOTest.Items
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+
+namespace AmurQSOTest.Items
 {
     /// <summary>
     /// сырое QSO
@@ -107,6 +111,17 @@
             SendExch3 = "";
             SendRST = "";
             Time = "";
+        }
+
+        public int[] GetWidths()
+        {
+            List<int> widths = new List<int>();
+            Type type = this.GetType();
+            foreach (PropertyInfo p in type.GetProperties())
+            {
+                widths.Add(Util.GetProperty(this,p.Name).ToString().Length);
+            }
+            return widths.ToArray();
         }
     }
 }

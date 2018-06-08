@@ -11,9 +11,25 @@ namespace TestZone
     {
         static void Main(string[] args)
         {
-            Test test = new Test("1", "2", "3", "4");
-            SetProperty(test, "Var1", "STR!");
-            Console.WriteLine(GetProperty(test, "Var1"));
+            // Define two locator positions
+            string homeLoc = "JN59MN";
+            string destLoc = "JO63DH";
+
+            // Compute distance [km] and direction [°]
+            double distance = MaidenheadLocator.Distance(homeLoc, destLoc);
+            Console.WriteLine(distance);
+            double azimuth = MaidenheadLocator.Azimuth(homeLoc, destLoc);
+
+            // Convert locator to latitude/longitude
+            LatLng homeLL = MaidenheadLocator.LocatorToLatLng(homeLoc);
+
+            // Convert latitude/longitude to locator
+            string myLoc = MaidenheadLocator.LatLngToLocator(49.57, 11.08);
+
+
+            //Test test = new Test("1", "2", "3", "4");
+            //SetProperty(test, "Var1", "STR!");
+            //Console.WriteLine(GetProperty(test, "Var1"));
             Console.ReadKey();
         }
 
