@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -201,29 +202,39 @@ namespace AmurQSOTest.Items
 
         public override string ToString()
         {
-            string s = string.Format("QSO {0} : {1} {2} {3} {4} {5} {6} ", Raw.Number, Raw.Feq, Raw.Mode, Raw.Date, Raw.Time, Raw.SendCall, Raw.SendRST);
+            Type type = this.Raw.GetType();
+
+            string s="";
+
+            s = string.Concat(s, string.Format("QSO {0,-" + ContestFile.Width[0] + "} : ", Raw.Number));
+
+            // from Feq to send RST
+            for (int i = 1; i < 7; i++) {
+                s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[i] + "} ", Util.GetProperty(this.Raw, type.GetProperties()[i].Name).ToString()));
+            }
 
             if (Config.control > 0)
-                s = string.Concat(s, string.Format("{0} ", Raw.SendExch1));
+                s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[7] + "} ", Raw.SendExch1));
 
             if (Config.control > 1)
-                s = string.Concat(s, string.Format("{0} ", Raw.SendExch2));
+                s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[8] + "} ", Raw.SendExch2));
 
             if (Config.control > 2)
-                s = string.Concat(s, string.Format("{0} ", Raw.SendExch3));
+                s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[9] + "} ", Raw.SendExch3));
 
-            s = string.Concat(s, string.Format("{0} {1} ", Raw.RecvCall, Raw.RecvRST));
+            s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[10] + "} ", Raw.RecvCall));
+            s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[11] + "} ", Raw.RecvRST));
 
             if (Config.control > 0)
-                s = string.Concat(s, string.Format("{0} ", Raw.RecvExch1));
+                s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[12] + "} ", Raw.RecvExch1));
 
             if (Config.control > 1)
-                s = string.Concat(s, string.Format("{0} ", Raw.RecvExch2));
+                s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[13] + "} ", Raw.RecvExch2));
 
             if (Config.control > 2)
-                s = string.Concat(s, string.Format("{0} ", Raw.RecvExch3));
+                s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[14] + "} ", Raw.RecvExch3));
 
-            s = string.Concat(s, string.Format("{0} ", Raw.Mo2t));
+            s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[15] + "} ", Raw.Mo2t));
 
             return s;
         }

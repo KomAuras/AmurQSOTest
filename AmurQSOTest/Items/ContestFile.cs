@@ -56,6 +56,11 @@ namespace AmurQSOTest.Items
         /// </summary>
         public double TotalPoints;
 
+        /// <summary>
+        /// ширины всех полей QSO.Raw
+        /// </summary>
+        public int[] Width { get; set; }
+
         private bool CabrilloExist = false;
         private int qso_number = 0;
 
@@ -127,7 +132,6 @@ namespace AmurQSOTest.Items
             }
             foreach (QSO q in items)
             {
-                var ss = q.Raw.GetWidths();
                 foreach (string s in q.Errors)
                 {
                     temp.Add(s);
@@ -157,6 +161,25 @@ namespace AmurQSOTest.Items
                 s = fs.ReadLine();
                 if (s != null && s.Length > 0)
                     ParseLine(s.Trim());
+            }
+            GetQSOWidth();
+        }
+
+        /// <summary>
+        /// получить ширины всех НУЖНЫХ полей в QSO
+        /// </summary>
+        private void GetQSOWidth()
+        {
+            if (items.Count > 0) {
+                Width = items[0].Raw.GetWidths();
+                foreach (QSO item in items)
+                {
+                    for (int i = 0; i < Width.Length; i++)
+                    {
+                        if (item.Raw.GetWidths()[i] > Width[i])
+                            Width[i] = item.Raw.GetWidths()[i];
+                    }
+                }
             }
         }
 
