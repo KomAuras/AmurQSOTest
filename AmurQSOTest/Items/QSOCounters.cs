@@ -8,7 +8,7 @@
         /// <summary>
         /// номер подтура
         /// </summary>
-        public int SubTourNumber;
+        public int SubTour;
         /// <summary>
         /// связь отфильтрована по параметрам каталога
         /// </summary>

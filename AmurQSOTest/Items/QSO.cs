@@ -26,14 +26,13 @@ namespace AmurQSOTest.Items
         /// </summary>
         public List<string> Errors = new List<string>();
         /// <summary>
-        /// частота числом
+        /// частота числом - band!
         /// </summary>
         public int Feq;
         /// <summary>
         /// Дата и время связи
         /// </summary>
         public DateTime DateTime;
-
         /// <summary>
         /// счетчики QSO
         /// </summary>
@@ -41,7 +40,7 @@ namespace AmurQSOTest.Items
         /// <summary>
         /// ссылка на QSO корреспондента
         /// </summary>        
-        public QSO RecvQSO;
+        public QSO LinkedQSO;
 
         string[] fields;
 
@@ -143,6 +142,8 @@ namespace AmurQSOTest.Items
             // отправленные данные
             field_position++;
             Raw.SendCall = GetField(field_position, "send call");
+            if (ContestFile.Call == "")
+                ContestFile.Call = Raw.SendCall;
             field_position++;
             Raw.SendRST = GetField(field_position, "send RST");
             if (Config.control > 0)
@@ -204,11 +205,13 @@ namespace AmurQSOTest.Items
         {
             Type type = this.Raw.GetType();
 
-            string s="";
+            string s = "";
+            // вывести номер тура
+            //string s="" + Counters.SubTour + "< ";
 
             s = string.Concat(s, string.Format("QSO {0,-" + ContestFile.Width[0] + "} : ", Raw.Number));
 
-            // from Feq to send RST
+            // первые 6 полей.
             for (int i = 1; i < 7; i++) {
                 s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[i] + "} ", Util.GetProperty(this.Raw, type.GetProperties()[i].Name).ToString()));
             }

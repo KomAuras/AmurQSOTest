@@ -22,11 +22,11 @@ namespace AmurQSOTest.Items
         /// <summary>
         /// разрешенные диапазоны
         /// </summary>
-        public List<int> AllowBands;
+        public AllowBands AllowBands;
         /// <summary>
         /// разрешенные
         /// </summary>
-        public List<string> AllowModes;
+        public AllowModes AllowModes;
 
         public FolderConfig(string name)
         {

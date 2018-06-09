@@ -44,6 +44,8 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="Coordinate.cs" />
+    <Compile Include="Items\AllowBands.cs" />
+    <Compile Include="Items\AllowModes.cs" />
     <Compile Include="Items\ContestFileHeader.cs" />
     <Compile Include="Items\ContestFolder.cs" />
     <Compile Include="INIFile.cs" />
@@ -54,8 +56,11 @@
     <Compile Include="Items\Period.cs" />
     <Compile Include="Items\QSO.cs" />
     <Compile Include="Items\QSOCounters.cs" />
+    <Compile Include="Items\QSOList.cs" />
     <Compile Include="Items\RawQSO.cs" />
     <Compile Include="Items\Standards.cs" />
+    <Compile Include="Items\SubTour.cs" />
+    <Compile Include="Items\SubTours.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Program.cs" />

@@ -56,6 +56,16 @@ namespace AmurQSOTest.Items
 
     public class Bands : List<OneBand>
     {
+        public bool Check(int band)
+        {
+            foreach (OneBand b in this)
+            {
+                if (b.Band == band)
+                    return true;
+            }
+            return false;
+        }
+
         public bool Check(int Freq, out int ResultFeq)
         {
             foreach (OneBand b in this)
@@ -81,8 +91,16 @@ namespace AmurQSOTest.Items
         }
     }
 
+    /// <summary>
+    /// режимы работы
+    /// </summary>
     public class Modes : List<OneMode>
     {
+        /// <summary>
+        /// проверить наличие моды
+        /// </summary>
+        /// <param name="Mode"></param>
+        /// <returns></returns>
         public bool Check(string Mode)
         {
             return this.FindIndex(x => x.Mode.ToUpper() == Mode.Trim().ToUpper()) > 0 ? false : true;

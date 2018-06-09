@@ -65,5 +65,20 @@ namespace AmurQSOTest.Items
                 file.Save();
             }
         }
+
+        /// <summary>
+        /// получить лог корреспондента
+        /// </summary>
+        /// <param name="call"></param>
+        /// <returns></returns>
+        public ContestFile Get(string call)
+        {
+            foreach (ContestFile f in Files)
+            {
+                if (f.Call == call)
+                    return f;
+            }
+            return null;
+        }
     }
 }

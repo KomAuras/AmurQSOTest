@@ -19,6 +19,10 @@ namespace AmurQSOTest
         /// </summary>        
         public static List<Period> ContestPeriod = new List<Period>();
         /// <summary>
+        /// подтуры в соревновании
+        /// </summary>
+        public static SubTours SubTours = new SubTours();
+        /// <summary>
         /// диапазоны теста с очками за них
         /// </summary>
         public static List<BandPoint> ContestBandPoints = new List<BandPoint>();
@@ -63,7 +67,7 @@ namespace AmurQSOTest
                 string s = "";
                 while (s != null)
                 {
-                s = fs.ReadLine();
+                    s = fs.ReadLine();
                     if (s != null && s.Length > 0)
                     {
                         if (s.TrimStart().Substring(0, 1) != ";")
@@ -71,9 +75,44 @@ namespace AmurQSOTest
                     }
                 }
                 AddFolderIfPrepared();
+                BuildTourList();
             }
         }
 
+        /// <summary>
+        /// формирование списка подтуров
+        /// </summary>
+        private static void BuildTourList()
+        {
+            int subtour_number = 0;
+            int offset = 0;
+            DateTime dt = DateTime.MinValue;
+            foreach (Period p in ContestPeriod)
+            {
+                offset = 0;
+                do
+                {
+                    SubTour subtour = new SubTour();
+                    subtour_number++;
+                    subtour.Number = subtour_number;
+                    subtour.Period.BeginDateTime = p.BeginDateTime.AddMinutes(offset);
+                    offset += Config.subtour_min;
+                    subtour.Period.EndDateTime = p.BeginDateTime.AddMinutes(offset);
+                    dt = subtour.Period.EndDateTime;
+                    if (dt <= p.EndDateTime)
+                    {
+                        if (dt == p.EndDateTime)
+                            subtour.End = true;
+                        SubTours.Add(subtour);
+                    }
+                } while (dt < p.EndDateTime);
+            }
+        }
+
+        /// <summary>
+        /// разбор одной строки из настроек
+        /// </summary>
+        /// <param name="s"></param>
         private static void ParseLine(string s)
         {
             // списки
@@ -89,7 +128,10 @@ namespace AmurQSOTest
                 string[] data = s.Substring(s.IndexOf('=') + 1).Split(',');
                 if (data.Count() != 2)
                     throw new Exception("Ошибка в очках за диапазон!");
-                ContestBandPoints.Add(new BandPoint(Int32.Parse(data[0]), Double.Parse(data[1], CultureInfo.InvariantCulture)));
+                int band = Int32.Parse(data[0]);
+                if (!Standards.Bands.Check(band))
+                    throw new Exception("Ошибка в частоте " + data[0]);
+                ContestBandPoints.Add(new BandPoint(band, Double.Parse(data[1], CultureInfo.InvariantCulture)));
             }
 
             // папки 
@@ -97,7 +139,8 @@ namespace AmurQSOTest
             {
                 AddFolderIfPrepared();
                 temp_folder = new FolderConfig(s.Substring(s.IndexOf('=') + 1).Trim());
-            }else if (Util.StrExists(s, "desc"))
+            }
+            else if (Util.StrExists(s, "desc"))
             {
                 if (temp_folder != null)
                     temp_folder.Desc = s.Substring(s.IndexOf('=') + 1).Trim();
@@ -106,10 +149,13 @@ namespace AmurQSOTest
             {
                 if (temp_folder != null)
                 {
-                    temp_folder.AllowBands = new List<int>();
+                    temp_folder.AllowBands = new AllowBands();
                     foreach (string str in s.Substring(s.IndexOf('=') + 1).Split(','))
                     {
-                        temp_folder.AllowBands.Add(Int32.Parse(str));
+                        int band = Int32.Parse(str);
+                        if (!Standards.Bands.Check(band))
+                            throw new Exception("Ошибка в частоте " + str);
+                        temp_folder.AllowBands.Add(band);
                     }
                 }
             }
@@ -117,9 +163,11 @@ namespace AmurQSOTest
             {
                 if (temp_folder != null)
                 {
-                    temp_folder.AllowModes = new List<string>();
-                    foreach (string str in s.Substring(s.IndexOf('=') + 1).Split(','))
+                    temp_folder.AllowModes = new AllowModes();
+                    foreach (string str in s.Substring(s.IndexOf('=') + 1).Split(',').Select(p => p.Trim()).ToList())
                     {
+                        if (Standards.Modes.Check(str))
+                            throw new Exception("Ошибка в режиме работы " + str);
                         temp_folder.AllowModes.Add(str);
                     }
                 }
@@ -176,6 +224,9 @@ namespace AmurQSOTest
             }
         }
 
+        /// <summary>
+        /// если был создан каталог - добавляем его
+        /// </summary>
         private static void AddFolderIfPrepared()
         {
             if (temp_folder != null)
@@ -185,6 +236,11 @@ namespace AmurQSOTest
             }
         }
 
+        /// <summary>
+        /// сохрание параметров запуска
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public static bool SetArgs(string[] args)
         {
             Config.args = args;
@@ -197,11 +253,18 @@ namespace AmurQSOTest
             return false;
         }
 
+        /// <summary>
+        /// вывод дампа настроек
+        /// </summary>
         public static void Dump()
         {
             foreach (Period DT in ContestPeriod)
             {
                 Console.WriteLine(DT.BeginDateTime.ToString() + " -> " + DT.EndDateTime.ToString());
+            }
+            foreach (SubTour st in SubTours)
+            {
+                Console.WriteLine(st.Number + " -> " + st.Period.BeginDateTime.ToString() + " - " + st.Period.EndDateTime.ToString());
             }
             foreach (BandPoint BP in ContestBandPoints)
             {

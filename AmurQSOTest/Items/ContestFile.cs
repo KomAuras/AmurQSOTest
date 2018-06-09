@@ -23,7 +23,7 @@ namespace AmurQSOTest.Items
         /// <summary>
         /// позывной файла
         /// </summary>
-        public string Call;
+        public string Call = "";
         /// <summary>
         /// заголовок файла с данными
         /// </summary>
@@ -35,7 +35,7 @@ namespace AmurQSOTest.Items
         /// <summary>
         /// связи QSO
         /// </summary>
-        public List<QSO> items = new List<QSO>();
+        public QSOList items = new QSOList();
 
         // счетчики внутренние
 
@@ -79,7 +79,206 @@ namespace AmurQSOTest.Items
         /// </summary>
         public void Calculate()
         {
-            //throw new NotImplementedException();
+            Calculate_Tours();
+            Calculate_FolderFilter();
+            Calculate_Double();
+            Calculate_Loop();
+            //Calculate_Points();
+        }
+
+        /// <summary>
+        /// основное связывание радиосвязей
+        /// </summary>
+        private void Calculate_Loop()
+        {
+            foreach (QSO item in items)
+            {
+                if (item.Counters.ErrorOnCheck == false &&
+                    item.Counters.Filtered == false &&
+                    item.Counters.OK == false)
+                {
+                    // получить лог корреспондента
+                    ContestFile file = ContestFolder.Get(item.Raw.RecvCall);
+                    if (file == null)
+                        item.Errors.Add("No log [" + item.Raw.RecvCall + "]");
+                    else
+                    {
+                        // TODO: сделать нормальную связь
+                        foreach (QSO q in file.items)
+                        {
+                            if (q.Counters.ErrorOnCheck == false &&
+                                q.Counters.Filtered == false &&
+                                q.Counters.OK == false)
+                            {
+                                if (Calculate_One(item, q))
+                                    break;
+                            }
+                        }
+                        //Calculate_AI(item, file);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// проверка двух связей и возможно связывание
+        /// </summary>
+        /// <param name="l"></param>
+        /// <param name="r"></param>
+        /// <param name="CompareDateTime"></param>
+        /// <returns></returns>
+        private bool Calculate_One(QSO l, QSO r, bool CompareDateTime = true)
+        {
+            // совпадение всех полей кроме RST
+            if (l.Raw.RecvCall == r.Raw.SendCall &&
+              l.Raw.SendCall == r.Raw.RecvCall &&
+              l.Feq == r.Feq &&
+              l.Raw.Mode == r.Raw.Mode &&
+              Util.AsNumeric(l.Raw.SendExch1) == Util.AsNumeric(r.Raw.RecvExch1) &&
+              Util.AsNumeric(l.Raw.SendExch2) == Util.AsNumeric(r.Raw.RecvExch2) &&
+              Util.AsNumeric(l.Raw.SendExch3) == Util.AsNumeric(r.Raw.RecvExch3) &&
+              Util.AsNumeric(l.Raw.RecvExch1) == Util.AsNumeric(r.Raw.SendExch1) &&
+              Util.AsNumeric(l.Raw.RecvExch2) == Util.AsNumeric(r.Raw.SendExch2) &&
+              Util.AsNumeric(l.Raw.RecvExch3) == Util.AsNumeric(r.Raw.SendExch3) &&
+              (CompareDateTime == false || (CompareDateTime == true && l.DateTime == r.DateTime)) &&
+              (Config.rst_check == 0 || (Config.rst_check == 1 &&
+              Util.AsNumeric(l.Raw.SendRST) == Util.AsNumeric(r.Raw.RecvRST) &&
+              Util.AsNumeric(l.Raw.RecvRST) == Util.AsNumeric(r.Raw.SendRST))) &&
+              Coordinate.ValidateLocator(l.Raw.SendExch2) == true &&
+              Coordinate.ValidateLocator(l.Raw.RecvExch2) == true)
+            // TODO: где то нужно сделать правильно проверку локаторов выше две строки
+            {
+                l.Errors.Clear();
+                r.Errors.Clear();
+                if (CompareDateTime)
+                {
+                    l.Errors.Add("=[" + r.Raw.SendCall + " QSO:" + r.Raw.Number + "]");
+                    r.Errors.Add("=[" + l.Raw.SendCall + " QSO:" + l.Raw.Number + "]");
+                }
+                else
+                {
+                    l.Errors.Add("±[" + r.Raw.SendCall + " QSO:" + r.Raw.Number + "]");
+                    r.Errors.Add("±[" + l.Raw.SendCall + " QSO:" + l.Raw.Number + "]");
+                }
+                if (Int32.Parse(l.Raw.SendRST) != Int32.Parse(r.Raw.RecvRST))
+                {
+                    l.Errors.Add("Partner warning (" + l.Raw.SendRST + " QSO:" + r.Raw.RecvRST + ")");
+                    r.Errors.Add("Receive warning (" + l.Raw.SendRST + " QSO:" + r.Raw.RecvRST + ")");
+                }
+                if (Int32.Parse(l.Raw.RecvRST) != Int32.Parse(r.Raw.SendRST))
+                {
+                    l.Errors.Add("Receive warning (" + r.Raw.SendRST + " QSO:" + l.Raw.RecvRST + ")");
+                    r.Errors.Add("Partner warning (" + r.Raw.SendRST + " QSO:" + l.Raw.RecvRST + ")");
+                }
+                l.LinkedQSO = r;
+                l.Counters.OK = true;
+                r.LinkedQSO = l;
+                r.Counters.OK = true;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// поиск повторов. самое крутое гавно в программе!!!
+        /// </summary>
+        private void Calculate_Double()
+        {
+            int subtour_number = 0;
+            string previous_callsign = "";
+            QSOList this_subtour = new QSOList();
+            QSO found_qso;
+            foreach (QSO item in items)
+            {
+                if (!item.Counters.Filtered && !item.Counters.ErrorOnCheck)
+                {
+                    if (subtour_number != item.Counters.SubTour)
+                        this_subtour.Clear();
+                    subtour_number = item.Counters.SubTour;
+
+                    /// TODO: Решить тут все вопросы по проверкам
+                    /// т.к. некоторых нет в настройках!
+
+                    /// В каждом подтуре, на каждом диапазоне с одним и тем же корреспондентом 
+                    /// разрешается провести по две радиосвязи: одну радиосвязь – телеграфом CW, 
+                    /// одну – телефоном (FM или SSB)
+
+                    // находим связь с этим корреспондентом в этом туре на этом диапазоне(частоте)
+                    found_qso = null;
+                    if (Config.double_check == 1)
+                    {
+                        if (this_subtour.GetPrevious(item, out found_qso))
+                        {
+                            // если текущая CW и была связь на CW
+                            if ((item.Raw.Mode == "CW" && item.Raw.Mode == found_qso.Raw.Mode) ||
+                                // если текущая не CW и была связь не CW
+                                (item.Raw.Mode != "CW" && found_qso.Raw.Mode != "CW"))
+                                item.Errors.Add("Subtour double [mode] with QSO: " + found_qso.Raw.Number);
+                        }
+                    }
+
+                    ///// Повторную радиосвязь разными видами модуляции с одним и тем же корреспондентом 
+                    ///// разрешается проводить не ранее, чем через 3 минуты после предыдущей связи, или 
+                    ///// через одну радиосвязь, проведенную с другим корреспондентом.
+
+                    //if (Config.repeat_call > 0)
+                    //{
+                    //    // сколько прошло времени с предыдущей связи этого позывного
+                    //    int Minutes = this_subtour.GetOffsetMinutes(item, out found_qso);
+                    //    if (found_qso != null)
+                    //        // предыдущая связь, по времени можно или не предыдущая связь
+                    //        if (!(((previous_callsign == item.Raw.RecvCall && Minutes >= Config.repeat_call) || previous_callsign != item.Raw.RecvCall)
+                    //            // текущий CW и был не CW
+                    //            && ((item.Raw.Mode == "CW" && found_qso.Raw.Mode != "CW") ||
+                    //            // текущий не CW и был не CW
+                    //            (item.Raw.Mode != "CW" && found_qso.Raw.Mode != "CW"))))
+                    //        {
+                    //            item.Errors.Add("Subtour double [time] with QSO:" + found_qso.Raw.Number);
+                    //        }
+                    //}
+                }
+                this_subtour.Add(item);
+                previous_callsign = item.Raw.RecvCall;
+            }
+            this_subtour.Clear();
+        }
+
+        /// <summary>
+        /// фильтрация QSO по настройкам папки. диапазоны и режимы работы
+        /// </summary>
+        private void Calculate_FolderFilter()
+        {
+            foreach (QSO item in items)
+            {
+                if (!ContestFolder.cfg.AllowBands.Check(item.Feq))
+                {
+                    item.Errors.Add("Filtered [band]");
+                    item.Counters.Filtered = true;
+                }
+                if (!ContestFolder.cfg.AllowModes.Check(item.Raw.Mode))
+                {
+                    item.Errors.Add("Filtered [mode]");
+                    item.Counters.Filtered = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// запись номеров туров в QSO
+        /// </summary>
+        private void Calculate_Tours()
+        {
+            foreach (QSO item in items)
+            {
+                int subtour_number = Config.SubTours.Inside(item.DateTime);
+                if (subtour_number > 0)
+                    item.Counters.SubTour = subtour_number;
+                else
+                {
+                    item.Errors.Add("Error in date/time [" + item.Raw.Date + " " + item.Raw.Time + "]");
+                    item.Counters.ErrorOnCheck = true;
+                }
+            }
         }
 
         /// <summary>
@@ -91,7 +290,7 @@ namespace AmurQSOTest.Items
             SaveClaim();
             SaveUBN();
         }
-        
+
         /// <summary>
         /// запись файла Claim
         /// </summary>
@@ -102,8 +301,13 @@ namespace AmurQSOTest.Items
             string filename = path + @"\" + Config.folder_ubn + @"\" + Path.GetFileNameWithoutExtension(FullName) + " UBN.txt";
             File.Delete(filename);
             StreamWriter fw = new StreamWriter(filename, true);
-            foreach(QSO q in items) {
+            foreach (QSO q in items)
+            {
                 string s = q.ToString();
+                if (q.Errors.Count > 0)
+                {
+                    s = string.Concat(s, " ::: " + string.Join(", ", q.Errors));
+                }
                 fw.WriteLine(s, Encoding.GetEncoding("Windows-1251"));
             }
             fw.Close();
@@ -170,7 +374,8 @@ namespace AmurQSOTest.Items
         /// </summary>
         private void GetQSOWidth()
         {
-            if (items.Count > 0) {
+            if (items.Count > 0)
+            {
                 Width = items[0].Raw.GetWidths();
                 foreach (QSO item in items)
                 {
@@ -219,6 +424,7 @@ namespace AmurQSOTest.Items
                 if (Util.StrExists(s, "callsign:"))
                 {
                     header.callsign = s.Substring(s.IndexOf(':') + 1).Trim();
+                    Call = header.callsign;
                 }
                 if (Util.StrExists(s, "category-assisted:"))
                 {

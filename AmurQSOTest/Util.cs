@@ -66,6 +66,21 @@ namespace AmurQSOTest
             PropertyInfo prop = (target.GetType()).GetProperty(property_name);
             prop.SetValue(target, value, null);
         }
+
+        /// <summary>
+        /// прогнать string через int для отрезания лидирующих нулей... 
+        /// TODO: можно переделать!
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string AsNumeric(string str)
+        {
+            int value;
+            if (Int32.TryParse(str, out value)) {
+                return value.ToString();
+            }
+            return str;
+        }
     }
 
     [System.AttributeUsage(System.AttributeTargets.Property)]
