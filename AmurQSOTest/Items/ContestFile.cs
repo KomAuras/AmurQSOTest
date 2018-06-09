@@ -36,9 +36,7 @@ namespace AmurQSOTest.Items
         /// связи QSO
         /// </summary>
         public QSOList items = new QSOList();
-
         // счетчики внутренние
-
         /// <summary>
         /// заявлено записей
         /// </summary>
@@ -55,12 +53,10 @@ namespace AmurQSOTest.Items
         /// всего очков
         /// </summary>
         public double TotalPoints;
-
         /// <summary>
         /// ширины всех полей QSO.Raw
         /// </summary>
         public int[] Width { get; set; }
-
         private bool CabrilloExist = false;
         private int qso_number = 0;
 
@@ -83,7 +79,29 @@ namespace AmurQSOTest.Items
             Calculate_FolderFilter();
             Calculate_Double();
             Calculate_Loop();
-            //Calculate_Points();
+            Calculate_Points();
+        }
+
+        /// <summary>
+        /// расчет очков
+        /// </summary>
+        private void Calculate_Points()
+        {
+            foreach (QSO item in items)
+            {
+                if (!item.Counters.Filtered)
+                    ClaimQty++;
+                if (item.Counters.OK)
+                {
+                    // TODO: в этом месте локатор должен проверяться в связи с настройками 
+                    item.Counters.Distantion = Math.Round(Coordinate.GetDistance(item.Raw.SendExch2, item.Raw.RecvExch2), 0);
+                    item.Counters.ByLocator = Math.Round(item.Counters.Distantion > 0 ? item.Counters.Distantion : 1 * Config.ContestBandPoints.GetPoints(item.Feq), 0);
+                    item.Counters.Total = item.Counters.ByLocator;
+                    OKQty++;
+                }
+                TotalPoints += item.Counters.Total;
+                AllQty++;
+            }
         }
 
         /// <summary>
@@ -100,7 +118,10 @@ namespace AmurQSOTest.Items
                     // получить лог корреспондента
                     ContestFile file = ContestFolder.Get(item.Raw.RecvCall);
                     if (file == null)
+                    {
                         item.Errors.Add("No log [" + item.Raw.RecvCall + "]");
+                        ContestFolder.LostFiles.Add(item.Raw.RecvCall);
+                    }
                     else
                     {
                         // TODO: сделать нормальную связь
@@ -114,10 +135,50 @@ namespace AmurQSOTest.Items
                                     break;
                             }
                         }
-                        //Calculate_AI(item, file);
+                        Calculate_AI(item, file.items);
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// интелектуальное сравнение связи. сначала с оффсетом а потом с магией
+        /// </summary>
+        /// <param name="l"></param>
+        /// <param name="qso_list"></param>
+        private void Calculate_AI(QSO l, QSOList qso_list)
+        {
+            QSOList new_qso_list = new QSOList();
+            foreach (QSO item in qso_list)
+            {
+                if (item.Counters.ErrorOnCheck == false && item.Counters.Filtered == false && item.Counters.OK == false)
+                {
+                    if (l.DateTime.AddMinutes(-10) <= item.DateTime && item.DateTime <= l.DateTime.AddMinutes(10))
+                    {
+                        new_qso_list.Add(item);
+                    }
+                }
+            }
+            bool found = false;
+            foreach (QSO item in new_qso_list)
+            {
+                found = Calculate_One(l, item, false);
+                if (found)
+                {
+                    new_qso_list.Clear();
+                    return;
+                }
+            }
+            /// TODO: доделать ебаное интелектуальное сравнение
+            /// вроде мысли появились, сравнивать блоками.
+            /// типа сравнить дату время и позывные, потом моду, потом контрольные номера и локаторы
+            //if (!found)
+            //{
+            //    foreach (QSO item in new_qso_list)
+            //    {
+
+            //    }
+            //}
         }
 
         /// <summary>
@@ -152,23 +213,23 @@ namespace AmurQSOTest.Items
                 r.Errors.Clear();
                 if (CompareDateTime)
                 {
-                    l.Errors.Add("=[" + r.Raw.SendCall + " QSO:" + r.Raw.Number + "]");
-                    r.Errors.Add("=[" + l.Raw.SendCall + " QSO:" + l.Raw.Number + "]");
+                    l.Errors.Add("=[" + r.Raw.SendCall + " QSO:" + r.Raw.Number + " " + r.DateTime.ToShortTimeString().ToString() + "]");
+                    r.Errors.Add("=[" + l.Raw.SendCall + " QSO:" + l.Raw.Number + " " + l.DateTime.ToShortTimeString().ToString() + "]");
                 }
                 else
                 {
-                    l.Errors.Add("±[" + r.Raw.SendCall + " QSO:" + r.Raw.Number + "]");
-                    r.Errors.Add("±[" + l.Raw.SendCall + " QSO:" + l.Raw.Number + "]");
+                    l.Errors.Add("±[" + r.Raw.SendCall + " QSO:" + r.Raw.Number + " " + r.DateTime.ToShortTimeString().ToString() + "]");
+                    r.Errors.Add("±[" + l.Raw.SendCall + " QSO:" + l.Raw.Number + " " + l.DateTime.ToShortTimeString().ToString() + "]");
                 }
-                if (Int32.Parse(l.Raw.SendRST) != Int32.Parse(r.Raw.RecvRST))
+                if (Util.AsNumeric(l.Raw.SendRST) != Util.AsNumeric(r.Raw.RecvRST))
                 {
-                    l.Errors.Add("Partner warning (" + l.Raw.SendRST + " QSO:" + r.Raw.RecvRST + ")");
-                    r.Errors.Add("Receive warning (" + l.Raw.SendRST + " QSO:" + r.Raw.RecvRST + ")");
+                    l.Errors.Add("Partner warning (" + l.Raw.SendRST + "/" + r.Raw.RecvRST + ")");
+                    r.Errors.Add("Receive warning (" + l.Raw.SendRST + "/" + r.Raw.RecvRST + ")");
                 }
-                if (Int32.Parse(l.Raw.RecvRST) != Int32.Parse(r.Raw.SendRST))
+                if (Util.AsNumeric(l.Raw.RecvRST) != Util.AsNumeric(r.Raw.SendRST))
                 {
-                    l.Errors.Add("Receive warning (" + r.Raw.SendRST + " QSO:" + l.Raw.RecvRST + ")");
-                    r.Errors.Add("Partner warning (" + r.Raw.SendRST + " QSO:" + l.Raw.RecvRST + ")");
+                    l.Errors.Add("Receive warning (" + r.Raw.SendRST + "/" + l.Raw.RecvRST + ")");
+                    r.Errors.Add("Partner warning (" + r.Raw.SendRST + "/" + l.Raw.RecvRST + ")");
                 }
                 l.LinkedQSO = r;
                 l.Counters.OK = true;
@@ -196,7 +257,7 @@ namespace AmurQSOTest.Items
                         this_subtour.Clear();
                     subtour_number = item.Counters.SubTour;
 
-                    /// TODO: Решить тут все вопросы по проверкам
+                    /// TODO: решить тут все вопросы по проверкам
                     /// т.к. некоторых нет в настройках!
 
                     /// В каждом подтуре, на каждом диапазоне с одним и тем же корреспондентом 
@@ -298,15 +359,15 @@ namespace AmurQSOTest.Items
         {
             string path = Path.GetDirectoryName(FullName);
             Directory.CreateDirectory(path + @"\" + Config.folder_ubn);
-            string filename = path + @"\" + Config.folder_ubn + @"\" + Path.GetFileNameWithoutExtension(FullName) + " UBN.txt";
+            string filename = path + @"\" + Config.folder_ubn + @"\" + Path.GetFileNameWithoutExtension(FullName) + " Claim.txt";
             File.Delete(filename);
             StreamWriter fw = new StreamWriter(filename, true);
             foreach (QSO q in items)
             {
-                string s = q.ToString();
+                string s = q.ToString() + " : ";
                 if (q.Errors.Count > 0)
                 {
-                    s = string.Concat(s, " ::: " + string.Join(", ", q.Errors));
+                    s = string.Concat(s, string.Join(", ", q.Errors));
                 }
                 fw.WriteLine(s, Encoding.GetEncoding("Windows-1251"));
             }
@@ -318,6 +379,24 @@ namespace AmurQSOTest.Items
         /// </summary>
         private void SaveUBN()
         {
+            string path = Path.GetDirectoryName(FullName);
+            Directory.CreateDirectory(path + @"\" + Config.folder_ubn);
+            string filename = path + @"\" + Config.folder_ubn + @"\" + Path.GetFileNameWithoutExtension(FullName) + " UBN.txt";
+            File.Delete(filename);
+            StreamWriter fw = new StreamWriter(filename, true);
+            foreach (QSO q in items)
+            {
+                if (q.Counters.OK == false)
+                {
+                    string s = q.ToString() + " : ";
+                    if (q.Errors.Count > 0)
+                    {
+                        s = string.Concat(s, string.Join(", ", q.Errors));
+                    }
+                    fw.WriteLine(s, Encoding.GetEncoding("Windows-1251"));
+                }
+            }
+            fw.Close();
         }
 
         /// <summary>
@@ -336,7 +415,7 @@ namespace AmurQSOTest.Items
             }
             foreach (QSO q in items)
             {
-                foreach (string s in q.Errors)
+                foreach (string s in q.CheckErrors)
                 {
                     temp.Add(s);
                 }

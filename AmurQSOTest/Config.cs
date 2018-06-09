@@ -25,7 +25,7 @@ namespace AmurQSOTest
         /// <summary>
         /// диапазоны теста с очками за них
         /// </summary>
-        public static List<BandPoint> ContestBandPoints = new List<BandPoint>();
+        public static BandPoints ContestBandPoints = new BandPoints();
         /// <summary>
         /// папки с файлами
         /// </summary>

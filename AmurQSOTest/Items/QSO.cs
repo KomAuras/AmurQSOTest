@@ -26,6 +26,10 @@ namespace AmurQSOTest.Items
         /// </summary>
         public List<string> Errors = new List<string>();
         /// <summary>
+        /// ошибки разбора QSO
+        /// </summary>
+        public List<string> CheckErrors = new List<string>();
+        /// <summary>
         /// частота числом - band!
         /// </summary>
         public int Feq;
@@ -64,7 +68,7 @@ namespace AmurQSOTest.Items
         {
             if (Coordinate.ValidateLocator(sendExch1))
             {
-                Errors.Add("Error in " + v);
+                CheckErrors.Add("Error in " + v);
                 Counters.ErrorOnCheck = true;
             }
         }
@@ -85,7 +89,7 @@ namespace AmurQSOTest.Items
             {
                 if (field_name.Length > 0)
                 {
-                    Errors.Add("Empty " + field_name);
+                    CheckErrors.Add("Empty " + field_name);
                     Counters.ErrorOnCheck = true;
                 }
             }
@@ -100,7 +104,7 @@ namespace AmurQSOTest.Items
         /// <param name="s"></param>
         private void Parse(string s)
         {
-            fields = s.Split(new char[] { ' ', '\t' }).Where(z => z != string.Empty).ToArray();
+            fields = s.ToUpper().Split(new char[] { ' ', '\t' }).Where(z => z != string.Empty).ToArray();
             int field_position = 0;
 
             // частота
@@ -108,12 +112,12 @@ namespace AmurQSOTest.Items
             Raw.Feq = GetField(field_position, "feq");
             if (!Int32.TryParse(Raw.Feq, out int temp_feq))
             {
-                Errors.Add("Bad feq [" + Raw.Feq + "]");
+                CheckErrors.Add("Bad feq [" + Raw.Feq + "]");
                 Counters.ErrorOnCheck = true;
             }
             if (Standards.Bands.Check(temp_feq, out temp_feq))
             {
-                Errors.Add("Not specified feq [" + temp_feq + "]");
+                CheckErrors.Add("Not specified feq [" + temp_feq + "]");
                 Counters.ErrorOnCheck = true;
             }
             Feq = temp_feq;
@@ -123,7 +127,7 @@ namespace AmurQSOTest.Items
             Raw.Mode = GetField(field_position, "mode");
             if (Standards.Modes.Check(Raw.Mode))
             {
-                Errors.Add("Not specified mode [" + Raw.Mode + "]");
+                CheckErrors.Add("Not specified mode [" + Raw.Mode + "]");
                 Counters.ErrorOnCheck = true;
             }
 
@@ -135,7 +139,7 @@ namespace AmurQSOTest.Items
             bool t = DateTime.TryParseExact(Raw.Date.Trim() + " " + Raw.Time.Trim(), "yyyy-MM-dd HHmm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime);
             if (DateTime == DateTime.MinValue)
             {
-                Errors.Add("Not specified DateTime [" + Raw.Date.Trim() + " " + Raw.Time.Trim() + "]");
+                CheckErrors.Add("Not specified DateTime [" + Raw.Date.Trim() + " " + Raw.Time.Trim() + "]");
                 Counters.ErrorOnCheck = true;
             }
 
@@ -238,6 +242,11 @@ namespace AmurQSOTest.Items
                 s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[14] + "} ", Raw.RecvExch3));
 
             s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[15] + "} ", Raw.Mo2t));
+
+            /// TODO: Очки по строке QSO
+            s = string.Concat(s, string.Format("{0,7}км ", Counters.Distantion));
+            s = string.Concat(s, string.Format("{0,5}оч. ", Counters.ByLocator));
+            s = string.Concat(s, string.Format("{0,5}оч. ", Counters.Total));
 
             return s;
         }

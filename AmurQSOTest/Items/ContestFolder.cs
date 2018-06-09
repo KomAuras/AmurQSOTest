@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace AmurQSOTest.Items
 {
@@ -17,6 +19,10 @@ namespace AmurQSOTest.Items
         /// список файлов для расчета
         /// </summary>
         public List<ContestFile> Files = new List<ContestFile>();
+        /// <summary>
+        /// потерянные файлы/позывные - нет отчетов
+        /// </summary>
+        public LostFiles LostFiles = new LostFiles();
 
         /// <summary>
         /// создать экземпляр с настройками из Config
@@ -64,6 +70,22 @@ namespace AmurQSOTest.Items
             {
                 file.Save();
             }
+            SaveLostFiles();
+        }
+        /// <summary>
+        /// записать отчет по потерянным файлам
+        /// </summary>
+        private void SaveLostFiles()
+        {
+            Directory.CreateDirectory(Config.AppFolder() + Config.ContestPath + @"\" + cfg.Name + @"\" + Config.folder_report);
+            string filename = Config.AppFolder() + Config.ContestPath + @"\" + cfg.Name + @"\" + Config.folder_report + @"\" + "LostFiles.txt";
+            File.Delete(filename);
+            StreamWriter fw = new StreamWriter(filename, true);
+            foreach (LostFile item in LostFiles.OrderByDescending(o => o.Count).ToList())
+            {
+                fw.WriteLine(string.Format("{0,-" + LostFiles.Width + "} = {1}", item.Call, item.Count), Encoding.GetEncoding("Windows-1251"));
+            }
+            fw.Close();
         }
 
         /// <summary>

@@ -49,10 +49,11 @@
     <Compile Include="Items\ContestFileHeader.cs" />
     <Compile Include="Items\ContestFolder.cs" />
     <Compile Include="INIFile.cs" />
-    <Compile Include="Items\BandPoint.cs" />
+    <Compile Include="Items\BandPoints.cs" />
     <Compile Include="Items\ContestFile.cs" />
     <Compile Include="Items\ContestFolders.cs" />
     <Compile Include="Items\FolderConfig.cs" />
+    <Compile Include="Items\LostFiles.cs" />
     <Compile Include="Items\Period.cs" />
     <Compile Include="Items\QSO.cs" />
     <Compile Include="Items\QSOCounters.cs" />
