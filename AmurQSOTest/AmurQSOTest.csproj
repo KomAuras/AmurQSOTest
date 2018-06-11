@@ -59,6 +59,7 @@
     <Compile Include="Items\QSOCounters.cs" />
     <Compile Include="Items\QSOList.cs" />
     <Compile Include="Items\RawQSO.cs" />
+    <Compile Include="Items\ReportMain.cs" />
     <Compile Include="Items\Standards.cs" />
     <Compile Include="Items\SubTour.cs" />
     <Compile Include="Items\SubTours.cs" />

@@ -13,5 +13,10 @@ namespace AmurQSOTest.Items
             }
             return false;
         }
+
+        public override string ToString()
+        {
+            return string.Join(", ", this);
+        }
     }
 }

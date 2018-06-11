@@ -244,9 +244,9 @@ namespace AmurQSOTest.Items
             s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[15] + "} ", Raw.Mo2t));
 
             /// TODO: Очки по строке QSO
-            s = string.Concat(s, string.Format("{0,7}км ", Counters.Distantion));
-            s = string.Concat(s, string.Format("{0,5}оч. ", Counters.ByLocator));
-            s = string.Concat(s, string.Format("{0,5}оч. ", Counters.Total));
+            s = string.Concat(s, string.Format("{0,5} ", Counters.Distantion));
+            s = string.Concat(s, string.Format("{0,5} ", Counters.ByLocator));
+            s = string.Concat(s, string.Format("{0,5}", Counters.Total));
 
             return s;
         }

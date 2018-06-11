@@ -33,5 +33,6 @@
         /// всего очков
         /// </summary>
         public double Total;
+
     }
 }

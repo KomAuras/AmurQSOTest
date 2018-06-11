@@ -71,7 +71,42 @@ namespace AmurQSOTest.Items
                 file.Save();
             }
             SaveLostFiles();
+            SaveReports();
         }
+
+        /// <summary>
+        /// основной отчет
+        /// </summary>
+        private void SaveReports()
+        {
+            List<ReportMain> rep = new List<ReportMain>();
+            Directory.CreateDirectory(Config.AppFolder() + Config.ContestPath + @"\" + cfg.Name + @"\" + Config.folder_report);
+            string filename = Config.AppFolder() + Config.ContestPath + @"\" + cfg.Name + @"\" + Config.folder_report + @"\" + "MainReport.txt";
+            File.Delete(filename);
+            StreamWriter fw = new StreamWriter(filename, true);
+            foreach (ContestFile f in Files)
+            {
+                ReportMain item = new ReportMain();
+                item.Call = f.Call;
+                item.AllQty = f.AllQty;
+                item.ClaimQty = f.ClaimQty;
+                item.OKQty = f.OKQty;
+                item.TotalPoints = f.TotalPoints;
+                rep.Add(item);
+            }
+            fw.WriteLine("Folder: " + cfg.Name);
+            fw.WriteLine("Description: " + cfg.Desc);
+            fw.WriteLine("Band: " + cfg.AllowBands.ToString());
+            fw.WriteLine("Modes: " + cfg.AllowModes.ToString());
+            fw.WriteLine(string.Format("\n{0,-10} {1,10} {2,10} {3,10} {4,10}", new string[5] { "Call", "All", "Claim", "OK", "Total" }));
+            fw.WriteLine(string.Concat(Enumerable.Repeat("-", 54)));
+            foreach (ReportMain item in rep.OrderByDescending(o => o.TotalPoints).ToList())
+            {
+                fw.WriteLine(string.Format("{0,-10} {1,10} {2,10} {3,10} {4,10}", item.Call, item.AllQty, item.ClaimQty, item.OKQty, item.TotalPoints), Encoding.GetEncoding("Windows-1251"));
+            }
+            fw.Close();
+        }
+
         /// <summary>
         /// записать отчет по потерянным файлам
         /// </summary>
