@@ -13,12 +13,21 @@ namespace AmurQSOTest.Items
 
         public static void Build()
         {
-            Bands.Add(new OneBand(144, 144, 146));
-            Bands.Add(new OneBand(144, 144000, 146000));
-            Bands.Add(new OneBand(430, 430, 440));
-            Bands.Add(new OneBand(430, 430000, 440000));
-            Bands.Add(new OneBand(1260, 1260, 1300));
-            Bands.Add(new OneBand(1260, 1260000, 1300000));
+            Bands.Add(new OneBand(144, 144,    146,    "FM,PH,CW"));
+            Bands.Add(new OneBand(144, 144000, 146000, ""));
+            Bands.Add(new OneBand(144, 144100, 144400, "PH,CW"));
+            Bands.Add(new OneBand(144, 145100, 145600, "FM"));
+
+            Bands.Add(new OneBand(430, 430,    440,    "FM,PH,CW"));
+            Bands.Add(new OneBand(430, 430000, 440000, ""));
+            Bands.Add(new OneBand(430, 432100, 432400, "PH,CW"));
+            Bands.Add(new OneBand(430, 432500, 433000, "FM"));
+
+            Bands.Add(new OneBand(1260, 1260,    1300,    "FM,PH,CW"));
+            Bands.Add(new OneBand(1260, 1260000, 1300000, ""));
+            Bands.Add(new OneBand(1260, 1295000, 1295100, "PH,CW"));
+            Bands.Add(new OneBand(1260, 1295500, 1295600, "FM"));
+
             Modes.Add(new OneMode("AM"));
             Modes.Add(new OneMode("AX"));
             Modes.Add(new OneMode("CO"));
@@ -45,12 +54,17 @@ namespace AmurQSOTest.Items
         public int Band;
         public int FromFreq;
         public int ToFreq;
+        public Modes Modes = new Modes();
 
-        public OneBand(int band, int fromFreq, int toFreq)
+        public OneBand(int band, int fromFreq, int toFreq, string modes)
         {
             Band = band;
             FromFreq = fromFreq;
             ToFreq = toFreq;
+            foreach (string s in modes.Split(',').Select(p => p.Trim()).ToList())
+            {
+                Modes.Add(new OneMode(s));
+            }
         }
     }
 
@@ -64,6 +78,20 @@ namespace AmurQSOTest.Items
                     return true;
             }
             return false;
+        }
+
+        public bool Check(int Freq, string mode, out int ResultFeq)
+        {
+            foreach (OneBand b in this)
+            {
+                if (Freq >= b.FromFreq && Freq <= b.ToFreq && b.Modes.Check(mode))
+                {
+                    ResultFeq = b.Band;
+                    return false;
+                }
+            }
+            ResultFeq = 0;
+            return true;
         }
 
         public bool Check(int Freq, out int ResultFeq)

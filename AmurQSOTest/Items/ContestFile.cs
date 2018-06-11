@@ -95,7 +95,8 @@ namespace AmurQSOTest.Items
                 {
                     // TODO: в этом месте локатор должен проверяться в связи с настройками 
                     item.Counters.Distantion = Math.Round(Coordinate.GetDistance(item.Raw.SendExch2, item.Raw.RecvExch2), 0);
-                    item.Counters.ByLocator = Math.Round(item.Counters.Distantion > 0 ? item.Counters.Distantion : 1 * Config.ContestBandPoints.GetPoints(item.Feq), 0);
+                    if (item.Counters.Distantion == 0) { item.Counters.Distantion = 1; }
+                    item.Counters.ByLocator = Math.Round(item.Counters.Distantion * Config.ContestBandPoints.GetPoints(item.Feq), 0);
                     item.Counters.Total = item.Counters.ByLocator;
                     OKQty++;
                 }
@@ -194,7 +195,14 @@ namespace AmurQSOTest.Items
 
                         string ltext = "@[" + r.Raw.SendCall + " QSO:" + r.Raw.Number;
 
-                        if (l.Raw.Mode != r.Raw.Mode) {
+                        //if (l.Raw.Mode != r.Raw.Mode) {
+                        //    // мода не совпала
+                        //    ltext = string.Concat(ltext, " [mode: " + l.Raw.Mode + "/" + r.Raw.Mode + "]");
+                        //}
+
+                        if ((l.Raw.Mode == "CW" && r.Raw.Mode != "CW") ||
+                            (l.Raw.Mode != "CW" && r.Raw.Mode == "CW"))
+                        {
                             // мода не совпала
                             ltext = string.Concat(ltext, " [mode: " + l.Raw.Mode + "/" + r.Raw.Mode + "]");
                         }
@@ -260,7 +268,8 @@ namespace AmurQSOTest.Items
             if (l.Raw.RecvCall == r.Raw.SendCall &&
               l.Raw.SendCall == r.Raw.RecvCall &&
               l.Feq == r.Feq &&
-              l.Raw.Mode == r.Raw.Mode &&
+              //(l.Raw.Mode == r.Raw.Mode) &&
+              ((l.Raw.Mode == r.Raw.Mode && l.Raw.Mode == "CW") || (l.Raw.Mode != "CW" && r.Raw.Mode != "CW")) &&
               Util.AsNumeric(l.Raw.SendExch1) == Util.AsNumeric(r.Raw.RecvExch1) &&
               Util.AsNumeric(l.Raw.SendExch2) == Util.AsNumeric(r.Raw.RecvExch2) &&
               Util.AsNumeric(l.Raw.SendExch3) == Util.AsNumeric(r.Raw.RecvExch3) &&
@@ -328,7 +337,7 @@ namespace AmurQSOTest.Items
 
                     /// В каждом подтуре, на каждом диапазоне с одним и тем же корреспондентом 
                     /// разрешается провести по две радиосвязи: одну радиосвязь – телеграфом CW, 
-                    /// одну – телефоном (FM или SSB)
+                    /// одну – телефоном (FM или PH)
 
                     // находим связь с этим корреспондентом в этом туре на этом диапазоне(частоте)
                     found_qso = null;
@@ -349,22 +358,14 @@ namespace AmurQSOTest.Items
                     ///// Повторную радиосвязь разными видами модуляции с одним и тем же корреспондентом 
                     ///// разрешается проводить не ранее, чем через 3 минуты после предыдущей связи, или 
                     ///// через одну радиосвязь, проведенную с другим корреспондентом.
-
-                    //if (Config.repeat_call > 0)
-                    //{
-                    //    // сколько прошло времени с предыдущей связи этого позывного
-                    //    int Minutes = this_subtour.GetOffsetMinutes(item, out found_qso);
-                    //    if (found_qso != null)
-                    //        // предыдущая связь, по времени можно или не предыдущая связь
-                    //        if (!(((previous_callsign == item.Raw.RecvCall && Minutes >= Config.repeat_call) || previous_callsign != item.Raw.RecvCall)
-                    //            // текущий CW и был не CW
-                    //            && ((item.Raw.Mode == "CW" && found_qso.Raw.Mode != "CW") ||
-                    //            // текущий не CW и был не CW
-                    //            (item.Raw.Mode != "CW" && found_qso.Raw.Mode != "CW"))))
-                    //        {
-                    //            item.Errors.Add("Subtour double [time] with QSO:" + found_qso.Raw.Number);
-                    //        }
-                    //}
+                    if (Config.repeat_call > 0)
+                    {
+                        int Minutes = this_subtour.GetOffsetMinutes(item, out found_qso);
+                        if (found_qso != null && previous_callsign == item.Raw.RecvCall && Minutes < Config.repeat_call)
+                        {
+                            item.Errors.Add("Subtour double [time] with QSO: " + found_qso.Raw.Number);
+                        }
+                    }
                 }
                 this_subtour.Add(item);
                 previous_callsign = item.Raw.RecvCall;

@@ -115,6 +115,7 @@ namespace AmurQSOTest.Items
                 CheckErrors.Add("Bad feq [" + Raw.Feq + "]");
                 Counters.ErrorOnCheck = true;
             }
+            // проверка соответствия диапазона и частоты
             if (Standards.Bands.Check(temp_feq, out temp_feq))
             {
                 CheckErrors.Add("Not specified feq [" + temp_feq + "]");
