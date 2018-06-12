@@ -206,7 +206,7 @@ namespace AmurQSOTest.Items
             //    Folder.Contest.FormatOK = false
         }
 
-        public override string ToString()
+        public string ToReport(bool output_points = true)
         {
             Type type = this.Raw.GetType();
 
@@ -245,9 +245,12 @@ namespace AmurQSOTest.Items
             s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[15] + "} ", Raw.Mo2t));
 
             /// TODO: Очки по строке QSO
-            s = string.Concat(s, string.Format("{0,5} ", Counters.Distantion));
-            s = string.Concat(s, string.Format("{0,5} ", Counters.ByLocator));
-            s = string.Concat(s, string.Format("{0,5}", Counters.Total));
+            if (output_points)
+            {
+                s = string.Concat(s, string.Format("{0,5} ", Counters.Distantion));
+                s = string.Concat(s, string.Format("{0,5} ", Counters.ByLocator));
+                s = string.Concat(s, string.Format("{0,5}", Counters.Total));
+            }
 
             //s = string.Concat(s, string.Format(" err:{0} ", Counters.ErrorOnCheck ? "1" : "0"));
             //s = string.Concat(s, string.Format("ok:{0} ", Counters.OK ? "1" : "0"));

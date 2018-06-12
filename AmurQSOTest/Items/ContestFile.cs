@@ -71,13 +71,20 @@ namespace AmurQSOTest.Items
         }
 
         /// <summary>
-        /// расчет
+        /// предварительный расчет
         /// </summary>
-        public void Calculate()
+        public void PreCalculate()
         {
             Calculate_Tours();
             Calculate_FolderFilter();
             Calculate_Double();
+        }
+
+        /// <summary>
+        /// расчет
+        /// </summary>
+        public void Calculate()
+        {
             Calculate_Loop();
             Calculate_Points();
         }
@@ -121,7 +128,7 @@ namespace AmurQSOTest.Items
                     if (file == null)
                     {
                         item.Errors.Add("No log [" + item.Raw.RecvCall + "]");
-                        //item.Counters.ErrorOnCheck = true;
+                        item.Counters.ErrorOnCheck = true;
                         ContestFolder.LostFiles.Add(item.Raw.RecvCall);
                     }
                     else
@@ -469,7 +476,6 @@ namespace AmurQSOTest.Items
                 {
                     item.Errors.Add("Error in date/time [" + item.Raw.Date + " " + item.Raw.Time + "]");
                     item.Counters.ErrorOnCheck = true;
-                    item.Counters.ErrorOnCheck = true;
                 }
             }
         }
@@ -494,9 +500,17 @@ namespace AmurQSOTest.Items
             string filename = path + @"\" + Config.folder_ubn + @"\" + Path.GetFileNameWithoutExtension(FullName) + " Claim.txt";
             File.Delete(filename);
             StreamWriter fw = new StreamWriter(filename, true);
+           
+            fw.WriteLine("CALLSIGN: " + header.callsign, Encoding.GetEncoding("Windows-1251"));
+            fw.WriteLine("NAME: " + header.name, Encoding.GetEncoding("Windows-1251"));
+            foreach (string s in header.address) {
+                fw.WriteLine("ADDRESS: " + s, Encoding.GetEncoding("Windows-1251"));
+            }
+            fw.WriteLine("\n" + string.Concat(Enumerable.Repeat("-", 84)) + "\n", Encoding.GetEncoding("Windows-1251"));
+
             foreach (QSO q in items)
             {
-                string s = q.ToString() + " : ";
+                string s = q.ToReport() + " : ";
                 if (q.Errors.Count > 0)
                 {
                     s = string.Concat(s, string.Join(", ", q.Errors));
@@ -517,11 +531,21 @@ namespace AmurQSOTest.Items
             string filename = path + @"\" + Config.folder_ubn + @"\" + Path.GetFileNameWithoutExtension(FullName) + " UBN.txt";
             File.Delete(filename);
             StreamWriter fw = new StreamWriter(filename, true);
+
+            fw.WriteLine("CALLSIGN: " + header.callsign, Encoding.GetEncoding("Windows-1251"));
+            fw.WriteLine("NAME: " + header.name, Encoding.GetEncoding("Windows-1251"));
+            foreach (string s in header.address)
+            {
+                fw.WriteLine("ADDRESS: " + s, Encoding.GetEncoding("Windows-1251"));
+            }
+            fw.WriteLine("\n" + string.Concat(Enumerable.Repeat("-", 84)) + "\n", Encoding.GetEncoding("Windows-1251"));
+            fw.WriteLine("UBN reports:\n", Encoding.GetEncoding("Windows-1251"));
+
             foreach (QSO q in items)
             {
                 if (q.Counters.OK == false)
                 {
-                    string s = q.ToString() + " : ";
+                    string s = q.ToReport(false) + " : ";
                     if (q.Errors.Count > 0)
                     {
                         s = string.Concat(s, string.Join(", ", q.Errors));
