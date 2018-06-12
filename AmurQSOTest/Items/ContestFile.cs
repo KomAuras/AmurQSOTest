@@ -121,6 +121,7 @@ namespace AmurQSOTest.Items
                     if (file == null)
                     {
                         item.Errors.Add("No log [" + item.Raw.RecvCall + "]");
+                        //item.Counters.ErrorOnCheck = true;
                         ContestFolder.LostFiles.Add(item.Raw.RecvCall);
                     }
                     else
@@ -180,13 +181,11 @@ namespace AmurQSOTest.Items
             /// типа сравнить дату время и позывные, потом моду, потом контрольные номера и локаторы
             if (!found)
             {
-                //Console.WriteLine(l.ToString());
-                //Console.WriteLine("-------------------------------------------------------");
                 foreach (QSO r in new_qso_list)
                 {
-                    //Console.WriteLine(r.ToString());
-
-                    /// сравниваем. дата время уже в возможных границах
+                    /// странное сравнивание №1
+                    /// сравниваем по дата время уже в возможных границах
+                    /// диапазон, позывные, RST
                     ///              @           @       @     @                 @
                     /// <para>QSO: 28009 CW 2008-09-23 0711 UA1XYZ 599 001 123 UA2XYZ 599 001 AF 1</para> 
                     if (l.Raw.RecvCall == r.Raw.SendCall &&
@@ -247,11 +246,70 @@ namespace AmurQSOTest.Items
                                 ltext = string.Concat(ltext, " [recv exch3: " + l.Raw.RecvExch3 + "/" + r.Raw.SendExch3 + "]");
                         }
                         l.Errors.Add(ltext + "]");
+                        l.Counters.ErrorOnCheck = true;
+                        break;
                     }
 
+                    #region странное сравнивание №2
+                    ///// сравниваем по дата время уже в возможных границах
+                    ///// диапазон, локатор в одну сторону и позывной в одну сторону
+                    /////              @    @      @       @     
+                    ///// <para>QSO: 28009 CW 2008-09-23 0711 UA1XYZ 599 001 LOCATOR UA2XYZ 599 001 LOCATOR 1</para> 
+                    //if (((l.Raw.Mode == "CW" && r.Raw.Mode == "CW") || (l.Raw.Mode != "CW" && r.Raw.Mode != "CW")) &&
+                    //    Util.AsNumeric(l.Raw.SendExch2) == Util.AsNumeric(r.Raw.RecvExch2) &&
+                    //    l.Raw.RecvCall != r.Raw.SendCall &&
+                    //    l.Feq == r.Feq)
+                    //{
+                    //    string ltext = "@[" + r.Raw.SendCall + " QSO:" + r.Raw.Number;
+
+                    //    if (l.Raw.SendCall == r.Raw.RecvCall)
+                    //    {
+                    //        // переданный позывной и полученный
+                    //        ltext = string.Concat(ltext, " [recv call: " + l.Raw.RecvCall + "/" + r.Raw.SendCall + "]");
+                    //    }
+
+                    //    if (Util.AsNumeric(l.Raw.SendRST) != Util.AsNumeric(r.Raw.RecvRST) ||
+                    //        Util.AsNumeric(l.Raw.RecvRST) != Util.AsNumeric(r.Raw.SendRST))
+                    //    {
+                    //        // RST не совпало
+                    //        if (Util.AsNumeric(l.Raw.SendRST) != Util.AsNumeric(r.Raw.RecvRST))
+                    //            ltext = string.Concat(ltext, " [send rst: " + l.Raw.SendRST + "/" + r.Raw.RecvRST + "]");
+                    //        if (Util.AsNumeric(l.Raw.RecvRST) != Util.AsNumeric(r.Raw.SendRST))
+                    //            ltext = string.Concat(ltext, " [recv rst: " + l.Raw.RecvRST + "/" + r.Raw.SendRST + "]");
+                    //    }
+
+                    //    if (Util.AsNumeric(l.Raw.SendExch1) != Util.AsNumeric(r.Raw.RecvExch1) ||
+                    //        Util.AsNumeric(l.Raw.RecvExch1) != Util.AsNumeric(r.Raw.SendExch1))
+                    //    {
+                    //        // не совпал 1 контрольный
+                    //        if (Util.AsNumeric(l.Raw.SendExch1) != Util.AsNumeric(r.Raw.RecvExch1))
+                    //            ltext = string.Concat(ltext, " [send exch1: " + l.Raw.SendExch1 + "/" + r.Raw.RecvExch1 + "]");
+                    //        if (Util.AsNumeric(l.Raw.RecvExch1) != Util.AsNumeric(r.Raw.SendExch1))
+                    //            ltext = string.Concat(ltext, " [recv exch1: " + l.Raw.RecvExch1 + "/" + r.Raw.SendExch1 + "]");
+                    //    }
+
+                    //    if (Util.AsNumeric(l.Raw.RecvExch2) != Util.AsNumeric(r.Raw.SendExch2))
+                    //    {
+                    //        // не совпал 2 контрольный
+                    //        if (Util.AsNumeric(l.Raw.RecvExch2) != Util.AsNumeric(r.Raw.SendExch2))
+                    //            ltext = string.Concat(ltext, " [recv exch2: " + l.Raw.RecvExch2 + "/" + r.Raw.SendExch2 + "]");
+                    //    }
+
+                    //    if (Util.AsNumeric(l.Raw.SendExch3) != Util.AsNumeric(r.Raw.RecvExch3) ||
+                    //        Util.AsNumeric(l.Raw.RecvExch3) != Util.AsNumeric(r.Raw.SendExch3))
+                    //    {
+                    //        // не совпал 3 контрольный
+                    //        if (Util.AsNumeric(l.Raw.SendExch3) != Util.AsNumeric(r.Raw.RecvExch3))
+                    //            ltext = string.Concat(ltext, " [send exch3: " + l.Raw.SendExch3 + "/" + r.Raw.RecvExch3 + "]");
+                    //        if (Util.AsNumeric(l.Raw.RecvExch3) != Util.AsNumeric(r.Raw.SendExch3))
+                    //            ltext = string.Concat(ltext, " [recv exch3: " + l.Raw.RecvExch3 + "/" + r.Raw.SendExch3 + "]");
+                    //    }
+                    //    l.Errors.Add(ltext + "]");
+                    //    l.Counters.ErrorOnCheck = true;
+                    //    break;
+                    //}
+                    #endregion
                 }
-                //Console.ReadKey();
-                //Console.WriteLine("\n");
             }
         }
 
@@ -284,8 +342,8 @@ namespace AmurQSOTest.Items
               Coordinate.ValidateLocator(l.Raw.RecvExch2) == true)
             // TODO: где то нужно сделать правильно проверку локаторов выше две строки
             {
-                l.Errors.Clear();
-                r.Errors.Clear();
+                //l.Errors.Clear();
+                //r.Errors.Clear();
                 if (CompareDateTime)
                 {
                     l.Errors.Add("=[" + r.Raw.SendCall + " QSO:" + r.Raw.Number + " " + r.DateTime.ToString("HHmm") + "]");
@@ -351,6 +409,7 @@ namespace AmurQSOTest.Items
                                 (item.Raw.Mode != "CW" && found_qso.Raw.Mode != "CW"))
                             {
                                 item.Errors.Add("Subtour double [mode] with QSO: " + found_qso.Raw.Number);
+                                item.Counters.ErrorOnCheck = true;
                             }
                         }
                     }
@@ -364,6 +423,7 @@ namespace AmurQSOTest.Items
                         if (found_qso != null && previous_callsign == item.Raw.RecvCall && Minutes < Config.repeat_call)
                         {
                             item.Errors.Add("Subtour double [time] with QSO: " + found_qso.Raw.Number);
+                            item.Counters.ErrorOnCheck = true;
                         }
                     }
                 }
@@ -384,11 +444,13 @@ namespace AmurQSOTest.Items
                 {
                     item.Errors.Add("Filtered [band]");
                     item.Counters.Filtered = true;
+                    item.Counters.ErrorOnCheck = true;
                 }
                 if (!ContestFolder.cfg.AllowModes.Check(item.Raw.Mode))
                 {
                     item.Errors.Add("Filtered [mode]");
                     item.Counters.Filtered = true;
+                    item.Counters.ErrorOnCheck = true;
                 }
             }
         }
@@ -406,6 +468,7 @@ namespace AmurQSOTest.Items
                 else
                 {
                     item.Errors.Add("Error in date/time [" + item.Raw.Date + " " + item.Raw.Time + "]");
+                    item.Counters.ErrorOnCheck = true;
                     item.Counters.ErrorOnCheck = true;
                 }
             }
