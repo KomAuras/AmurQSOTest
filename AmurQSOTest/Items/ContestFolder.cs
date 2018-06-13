@@ -102,11 +102,13 @@ namespace AmurQSOTest.Items
             fw.WriteLine("Description: " + cfg.Desc);
             fw.WriteLine("Band: " + cfg.AllowBands.ToString());
             fw.WriteLine("Modes: " + cfg.AllowModes.ToString());
-            fw.WriteLine(string.Format("\n{0,-10} {1,10} {2,10} {3,10} {4,10}", new string[5] { "Call", "All", "Claim", "OK", "Total" }));
-            fw.WriteLine(string.Concat(Enumerable.Repeat("-", 54)));
+            fw.WriteLine(string.Format("\n{0,-8} {1,8} {2,8} {3,8} {4,8} {5,8}", new string[6] { "Call", "All", "Claim", "Conf.", "Conf.(%)", "Total" }));
+            fw.WriteLine(string.Concat(Enumerable.Repeat("-", 6 * 8 + 6 )));
+            double percent;
             foreach (ReportMain item in rep.OrderByDescending(o => o.TotalPoints).ToList())
             {
-                fw.WriteLine(string.Format("{0,-10} {1,10} {2,10} {3,10} {4,10}", item.Call, item.AllQty, item.ClaimQty, item.OKQty, item.TotalPoints), Encoding.GetEncoding("Windows-1251"));
+                percent = (double)item.OKQty / (double)item.ClaimQty;
+                fw.WriteLine(string.Format("{0,-8} {1,8} {2,8} {3,8} {4,8:0.00} {5,8}", item.Call, item.AllQty, item.ClaimQty, item.OKQty, Math.Round(percent * 100, 1), item.TotalPoints), Encoding.GetEncoding("Windows-1251"));
             }
             fw.Close();
         }

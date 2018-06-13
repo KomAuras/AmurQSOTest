@@ -541,6 +541,7 @@ namespace AmurQSOTest.Items
             fw.WriteLine("\n" + string.Concat(Enumerable.Repeat("-", 84)) + "\n", Encoding.GetEncoding("Windows-1251"));
             fw.WriteLine("UBN reports:\n", Encoding.GetEncoding("Windows-1251"));
 
+            int in_ubn = 0;
             foreach (QSO q in items)
             {
                 if (q.Counters.OK == false)
@@ -551,8 +552,10 @@ namespace AmurQSOTest.Items
                         s = string.Concat(s, string.Join(", ", q.Errors));
                     }
                     fw.WriteLine(s, Encoding.GetEncoding("Windows-1251"));
+                    in_ubn++;
                 }
             }
+            fw.WriteLine("\nTotal QSO with errors: " + in_ubn, Encoding.GetEncoding("Windows-1251"));
             fw.Close();
         }
 
