@@ -252,8 +252,9 @@ namespace AmurQSOTest.Items
                 s = string.Concat(s, string.Format("{0,5}", Counters.Total));
             }
 
+            //s = string.Concat(s, string.Format(" ok:{0} ", Counters.OK ? "1" : "0"));
             //s = string.Concat(s, string.Format(" err:{0} ", Counters.ErrorOnCheck ? "1" : "0"));
-            //s = string.Concat(s, string.Format("ok:{0} ", Counters.OK ? "1" : "0"));
+            //s = string.Concat(s, string.Format(" {0:10} ", Counters.ErrorType.ToString()));
 
             return s;
         }

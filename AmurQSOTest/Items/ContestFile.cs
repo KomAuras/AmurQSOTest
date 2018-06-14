@@ -86,7 +86,41 @@ namespace AmurQSOTest.Items
         public void Calculate()
         {
             Calculate_Loop();
+            Calculate_LastStand();
             Calculate_Points();
+        }
+
+        /// <summary>
+        /// последний расчет. закрываем пустышки по возможности
+        /// </summary>
+        private void Calculate_LastStand()
+        {
+            foreach (QSO l in items)
+            {
+                if (l.Counters.ErrorOnCheck == false &&
+                    l.Counters.OK == false &&
+                    l.Errors.Count == 0)
+                {
+                    // получить лог корреспондента
+                    ContestFile file = ContestFolder.Get(l.Raw.RecvCall);
+                    if (file != null)
+                    {
+                        foreach (QSO r in file.items)
+                        {
+                            if (r.Counters.ErrorOnCheck == true &&
+                                r.Counters.OK == false)
+                            {
+                                if (r.LinkedQSO != null && r.LinkedQSO.Equals(l) && r.Errors.Count > 0)
+                                {
+                                    l.Errors.Add(BuildErrorStr(l, r));
+                                    l.Counters.SetError(ErrorType.correrror);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -128,7 +162,7 @@ namespace AmurQSOTest.Items
                     if (file == null)
                     {
                         item.Errors.Add("No log [" + item.Raw.RecvCall + "]");
-                        item.Counters.ErrorOnCheck = true;
+                        item.Counters.SetError(ErrorType.nolog);
                         ContestFolder.LostFiles.Add(item.Raw.RecvCall);
                     }
                     else
@@ -141,7 +175,7 @@ namespace AmurQSOTest.Items
                                 q.Counters.Filtered == false &&
                                 q.Counters.OK == false)
                             {
-                                if (Calculate_One(item, q))
+                                if (Calculate_One(item, q, CalculateMode.withdate))
                                 {
                                     found = true;
                                     break;
@@ -176,7 +210,7 @@ namespace AmurQSOTest.Items
             bool found = false;
             foreach (QSO item in new_qso_list)
             {
-                found = Calculate_One(l, item, false);
+                found = Calculate_One(l, item, CalculateMode.withoutdate);
                 if (found)
                 {
                     new_qso_list.Clear();
@@ -199,61 +233,10 @@ namespace AmurQSOTest.Items
                         l.Raw.SendCall == r.Raw.RecvCall &&
                         l.Feq == r.Feq) {
 
-                        string ltext = "@[" + r.Raw.SendCall + " QSO:" + r.Raw.Number;
-
-                        //if (l.Raw.Mode != r.Raw.Mode) {
-                        //    // мода не совпала
-                        //    ltext = string.Concat(ltext, " [mode: " + l.Raw.Mode + "/" + r.Raw.Mode + "]");
-                        //}
-
-                        if ((l.Raw.Mode == "CW" && r.Raw.Mode != "CW") ||
-                            (l.Raw.Mode != "CW" && r.Raw.Mode == "CW"))
-                        {
-                            // мода не совпала
-                            ltext = string.Concat(ltext, " [mode: " + l.Raw.Mode + "/" + r.Raw.Mode + "]");
-                        }
-
-                        if (Util.AsNumeric(l.Raw.SendRST) != Util.AsNumeric(r.Raw.RecvRST) ||
-                            Util.AsNumeric(l.Raw.RecvRST) != Util.AsNumeric(r.Raw.SendRST))
-                        {
-                            // RST не совпало
-                            if (Util.AsNumeric(l.Raw.SendRST) != Util.AsNumeric(r.Raw.RecvRST))
-                                ltext = string.Concat(ltext, " [send rst: " + l.Raw.SendRST + "/" + r.Raw.RecvRST + "]");
-                            if (Util.AsNumeric(l.Raw.RecvRST) != Util.AsNumeric(r.Raw.SendRST))
-                                ltext = string.Concat(ltext, " [recv rst: " + l.Raw.RecvRST + "/" + r.Raw.SendRST + "]");
-                        }
-
-                        if (Util.AsNumeric(l.Raw.SendExch1) != Util.AsNumeric(r.Raw.RecvExch1) ||
-                            Util.AsNumeric(l.Raw.RecvExch1) != Util.AsNumeric(r.Raw.SendExch1))
-                        {
-                            // не совпал 1 контрольный
-                            if (Util.AsNumeric(l.Raw.SendExch1) != Util.AsNumeric(r.Raw.RecvExch1))
-                                ltext = string.Concat(ltext, " [send exch1: " + l.Raw.SendExch1 + "/" + r.Raw.RecvExch1 + "]");
-                            if (Util.AsNumeric(l.Raw.RecvExch1) != Util.AsNumeric(r.Raw.SendExch1))
-                                ltext = string.Concat(ltext, " [recv exch1: " + l.Raw.RecvExch1 + "/" + r.Raw.SendExch1 + "]");
-                        }
-
-                        if (Util.AsNumeric(l.Raw.SendExch2) != Util.AsNumeric(r.Raw.RecvExch2) ||
-                            Util.AsNumeric(l.Raw.RecvExch2) != Util.AsNumeric(r.Raw.SendExch2))
-                        {
-                            // не совпал 2 контрольный
-                            if (Util.AsNumeric(l.Raw.SendExch2) != Util.AsNumeric(r.Raw.RecvExch2))
-                                ltext = string.Concat(ltext, " [send exch2: " + l.Raw.SendExch2 + "/" + r.Raw.RecvExch2 + "]");
-                            if (Util.AsNumeric(l.Raw.RecvExch2) != Util.AsNumeric(r.Raw.SendExch2))
-                                ltext = string.Concat(ltext, " [recv exch2: " + l.Raw.RecvExch2 + "/" + r.Raw.SendExch2 + "]");
-                        }
-
-                        if (Util.AsNumeric(l.Raw.SendExch3) != Util.AsNumeric(r.Raw.RecvExch3) ||
-                            Util.AsNumeric(l.Raw.RecvExch3) != Util.AsNumeric(r.Raw.SendExch3))
-                        {
-                            // не совпал 3 контрольный
-                            if (Util.AsNumeric(l.Raw.SendExch3) != Util.AsNumeric(r.Raw.RecvExch3))
-                                ltext = string.Concat(ltext, " [send exch3: " + l.Raw.SendExch3 + "/" + r.Raw.RecvExch3 + "]");
-                            if (Util.AsNumeric(l.Raw.RecvExch3) != Util.AsNumeric(r.Raw.SendExch3))
-                                ltext = string.Concat(ltext, " [recv exch3: " + l.Raw.RecvExch3 + "/" + r.Raw.SendExch3 + "]");
-                        }
-                        l.Errors.Add(ltext + "]");
-                        l.Counters.ErrorOnCheck = true;
+                        l.Errors.Add(BuildErrorStr(l,r));
+                        l.Counters.SetError(ErrorType.similarqso);
+                        l.LinkedQSO = r;
+                        r.LinkedQSO = l;
                         break;
                     }
 
@@ -320,6 +303,67 @@ namespace AmurQSOTest.Items
             }
         }
 
+        public string BuildErrorStr(QSO l, QSO r)
+        {
+            string ltext = "@[" + r.Raw.SendCall + " QSO:" + r.Raw.Number;
+
+            //if (l.Raw.Mode != r.Raw.Mode) {
+            //    // мода не совпала
+            //    ltext = string.Concat(ltext, " [mode: " + l.Raw.Mode + "/" + r.Raw.Mode + "]");
+            //}
+
+            if ((l.Raw.Mode == "CW" && r.Raw.Mode != "CW") ||
+                (l.Raw.Mode != "CW" && r.Raw.Mode == "CW"))
+            {
+                // мода не совпала
+                ltext = string.Concat(ltext, " [mode: " + l.Raw.Mode + "/" + r.Raw.Mode + "]");
+            }
+
+            if (Util.AsNumeric(l.Raw.SendRST) != Util.AsNumeric(r.Raw.RecvRST) ||
+                Util.AsNumeric(l.Raw.RecvRST) != Util.AsNumeric(r.Raw.SendRST))
+            {
+                // RST не совпало
+                if (Util.AsNumeric(l.Raw.SendRST) != Util.AsNumeric(r.Raw.RecvRST))
+                    ltext = string.Concat(ltext, " [send rst: " + l.Raw.SendRST + "/" + r.Raw.RecvRST + "]");
+                if (Util.AsNumeric(l.Raw.RecvRST) != Util.AsNumeric(r.Raw.SendRST))
+                    ltext = string.Concat(ltext, " [recv rst: " + l.Raw.RecvRST + "/" + r.Raw.SendRST + "]");
+            }
+
+            if (Util.AsNumeric(l.Raw.SendExch1) != Util.AsNumeric(r.Raw.RecvExch1) ||
+                Util.AsNumeric(l.Raw.RecvExch1) != Util.AsNumeric(r.Raw.SendExch1))
+            {
+                // не совпал 1 контрольный
+                if (Util.AsNumeric(l.Raw.SendExch1) != Util.AsNumeric(r.Raw.RecvExch1))
+                    ltext = string.Concat(ltext, " [send exch1: " + l.Raw.SendExch1 + "/" + r.Raw.RecvExch1 + "]");
+                if (Util.AsNumeric(l.Raw.RecvExch1) != Util.AsNumeric(r.Raw.SendExch1))
+                    ltext = string.Concat(ltext, " [recv exch1: " + l.Raw.RecvExch1 + "/" + r.Raw.SendExch1 + "]");
+            }
+
+            if (Util.AsNumeric(l.Raw.SendExch2) != Util.AsNumeric(r.Raw.RecvExch2) ||
+                Util.AsNumeric(l.Raw.RecvExch2) != Util.AsNumeric(r.Raw.SendExch2))
+            {
+                // не совпал 2 контрольный
+                if (Util.AsNumeric(l.Raw.SendExch2) != Util.AsNumeric(r.Raw.RecvExch2))
+                    ltext = string.Concat(ltext, " [send exch2: " + l.Raw.SendExch2 + "/" + r.Raw.RecvExch2 + "]");
+                if (Util.AsNumeric(l.Raw.RecvExch2) != Util.AsNumeric(r.Raw.SendExch2))
+                    ltext = string.Concat(ltext, " [recv exch2: " + l.Raw.RecvExch2 + "/" + r.Raw.SendExch2 + "]");
+            }
+
+            if (Util.AsNumeric(l.Raw.SendExch3) != Util.AsNumeric(r.Raw.RecvExch3) ||
+                Util.AsNumeric(l.Raw.RecvExch3) != Util.AsNumeric(r.Raw.SendExch3))
+            {
+                // не совпал 3 контрольный
+                if (Util.AsNumeric(l.Raw.SendExch3) != Util.AsNumeric(r.Raw.RecvExch3))
+                    ltext = string.Concat(ltext, " [send exch3: " + l.Raw.SendExch3 + "/" + r.Raw.RecvExch3 + "]");
+                if (Util.AsNumeric(l.Raw.RecvExch3) != Util.AsNumeric(r.Raw.SendExch3))
+                    ltext = string.Concat(ltext, " [recv exch3: " + l.Raw.RecvExch3 + "/" + r.Raw.SendExch3 + "]");
+            }
+            ltext = string.Concat(ltext, "]");
+            return ltext;
+        }
+
+        public enum CalculateMode { withoutdate, withdate }
+
         /// <summary>
         /// проверка двух связей и возможно связывание
         /// </summary>
@@ -327,7 +371,7 @@ namespace AmurQSOTest.Items
         /// <param name="r"></param>
         /// <param name="CompareDateTime"></param>
         /// <returns></returns>
-        private bool Calculate_One(QSO l, QSO r, bool CompareDateTime = true)
+        private bool Calculate_One(QSO l, QSO r, CalculateMode mode)
         {
             // совпадение всех полей кроме RST
             if (l.Raw.RecvCall == r.Raw.SendCall &&
@@ -341,7 +385,7 @@ namespace AmurQSOTest.Items
               Util.AsNumeric(l.Raw.RecvExch1) == Util.AsNumeric(r.Raw.SendExch1) &&
               Util.AsNumeric(l.Raw.RecvExch2) == Util.AsNumeric(r.Raw.SendExch2) &&
               Util.AsNumeric(l.Raw.RecvExch3) == Util.AsNumeric(r.Raw.SendExch3) &&
-              (CompareDateTime == false || (CompareDateTime == true && l.DateTime == r.DateTime)) &&
+              (mode == CalculateMode.withoutdate || (mode == CalculateMode.withdate && l.DateTime == r.DateTime)) &&
               (Config.rst_check == 0 || (Config.rst_check == 1 &&
               Util.AsNumeric(l.Raw.SendRST) == Util.AsNumeric(r.Raw.RecvRST) &&
               Util.AsNumeric(l.Raw.RecvRST) == Util.AsNumeric(r.Raw.SendRST))) &&
@@ -351,7 +395,7 @@ namespace AmurQSOTest.Items
             {
                 //l.Errors.Clear();
                 //r.Errors.Clear();
-                if (CompareDateTime)
+                if (mode == CalculateMode.withdate)
                 {
                     l.Errors.Add("=[" + r.Raw.SendCall + " QSO:" + r.Raw.Number + " " + r.DateTime.ToString("HHmm") + "]");
                     r.Errors.Add("=[" + l.Raw.SendCall + " QSO:" + l.Raw.Number + " " + l.DateTime.ToString("HHmm") + "]");
@@ -416,7 +460,7 @@ namespace AmurQSOTest.Items
                                 (item.Raw.Mode != "CW" && found_qso.Raw.Mode != "CW"))
                             {
                                 item.Errors.Add("Subtour double [mode] with QSO: " + found_qso.Raw.Number);
-                                item.Counters.ErrorOnCheck = true;
+                                item.Counters.SetError(ErrorType.doublebymode);
                             }
                         }
                     }
@@ -430,7 +474,7 @@ namespace AmurQSOTest.Items
                         if (found_qso != null && previous_callsign == item.Raw.RecvCall && Minutes < Config.repeat_call)
                         {
                             item.Errors.Add("Subtour double [time] with QSO: " + found_qso.Raw.Number);
-                            item.Counters.ErrorOnCheck = true;
+                            item.Counters.SetError(ErrorType.doublebytime);
                         }
                     }
                 }
@@ -451,13 +495,13 @@ namespace AmurQSOTest.Items
                 {
                     item.Errors.Add("Filtered [band]");
                     item.Counters.Filtered = true;
-                    item.Counters.ErrorOnCheck = true;
+                    item.Counters.SetError(ErrorType.filteredband);
                 }
                 if (!ContestFolder.cfg.AllowModes.Check(item.Raw.Mode))
                 {
                     item.Errors.Add("Filtered [mode]");
                     item.Counters.Filtered = true;
-                    item.Counters.ErrorOnCheck = true;
+                    item.Counters.SetError(ErrorType.filteredmode);
                 }
             }
         }
@@ -475,7 +519,7 @@ namespace AmurQSOTest.Items
                 else
                 {
                     item.Errors.Add("Error in date/time [" + item.Raw.Date + " " + item.Raw.Time + "]");
-                    item.Counters.ErrorOnCheck = true;
+                    item.Counters.SetError(ErrorType.datetimeerror);
                 }
             }
         }

@@ -1,5 +1,16 @@
 ﻿namespace AmurQSOTest.Items
 {
+    public enum ErrorType
+    {
+        nolog = 1,
+        doublebytime,
+        doublebymode,
+        filteredband,
+        filteredmode,
+        datetimeerror,
+        similarqso,
+        correrror
+    }
     /// <summary>
     /// счетчики QSO, внутренние
     /// </summary>
@@ -14,11 +25,15 @@
         /// </summary>
         public bool Filtered;
         /// <summary>
-        /// установится в TRUE если были ошибки при предварительноя проверке
+        /// установится в TRUE если были ошибки
         /// </summary>
         public bool ErrorOnCheck;
         /// <summary>
-        /// установится в TRUE если свчзь есть
+        /// тип ошибки
+        /// </summary>
+        public ErrorType ErrorType;
+        /// <summary>
+        /// установится в TRUE если связь есть
         /// </summary>
         public bool OK;
         /// <summary>
@@ -33,6 +48,16 @@
         /// всего очков
         /// </summary>
         public double Total;
+
+        /// <summary>
+        /// установить ошибку по QSO
+        /// </summary>
+        /// <param name="ErrorType"></param>
+        public void SetError(ErrorType ErrorType)
+        {
+            ErrorOnCheck = true;
+            this.ErrorType = ErrorType;
+        }
 
     }
 }
