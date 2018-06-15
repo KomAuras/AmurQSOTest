@@ -2,7 +2,8 @@
 {
     public enum ErrorType
     {
-        nolog = 1,
+        clear = 0,
+        nolog,
         doublebytime,
         doublebymode,
         filteredband,
@@ -50,12 +51,19 @@
         public double Total;
 
         /// <summary>
+        /// оффсет от какого нибудь времени
+        /// для внутреннего использования.
+        /// </summary>
+        public int Offset;
+
+        /// <summary>
         /// установить ошибку по QSO
         /// </summary>
         /// <param name="ErrorType"></param>
         public void SetError(ErrorType ErrorType)
         {
-            ErrorOnCheck = true;
+            if (ErrorType != ErrorType.clear)
+                ErrorOnCheck = true;
             this.ErrorType = ErrorType;
         }
 

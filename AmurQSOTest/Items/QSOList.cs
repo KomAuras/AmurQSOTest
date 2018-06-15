@@ -12,6 +12,33 @@ namespace AmurQSOTest.Items
     /// </summary>
     public class QSOList : List<QSO>
     {
+        public QSOList GetPreviousInTour(QSO l, bool OnlySameMode)
+        {
+            QSOList result = new QSOList();
+            if (this.Count() > 0)
+                for (int i = this.Count() - 1; i >= 0; i--)
+                {
+                    if (!this[i].Counters.Filtered &&
+                        l.Raw.RecvCall == this[i].Raw.RecvCall &&
+                        l.Counters.SubTour == this[i].Counters.SubTour &&
+                        l.Feq == this[i].Feq &&
+                        l.Raw.Number != this[i].Raw.Number &&
+                        this[i].DateTime < l.DateTime)
+                    {
+                        if (!OnlySameMode ||
+                            (OnlySameMode && (
+                            (l.Raw.Mode == "CW" && l.Raw.Mode == this[i].Raw.Mode) ||
+                            (l.Raw.Mode != "CW" && this[i].Raw.Mode != "CW")
+                            )))
+                        {
+                            this[i].Counters.Offset = (int)(l.DateTime - this[i].DateTime).TotalMinutes;
+                            result.Add(this[i]);
+                        }
+                    }
+                }
+            return result;
+        }
+
         /// <summary>
         /// вернем QSO с предыдущей связью и количество минут прошедших с предыдущей связи
         /// </summary>

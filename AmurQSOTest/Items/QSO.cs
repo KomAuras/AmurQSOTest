@@ -143,6 +143,15 @@ namespace AmurQSOTest.Items
                 CheckErrors.Add("Not specified DateTime [" + Raw.Date.Trim() + " " + Raw.Time.Trim() + "]");
                 Counters.ErrorOnCheck = true;
             }
+            if (ContestFile.PreviousQSODatetTime > DateTime)
+            {
+                CheckErrors.Add("BAD DateTime [" + Raw.Date.Trim() + " " + Raw.Time.Trim() + "]");
+                Counters.Filtered = true;
+            }
+            else
+            {
+                ContestFile.PreviousQSODatetTime = DateTime;
+            }
 
             // отправленные данные
             field_position++;
@@ -217,7 +226,8 @@ namespace AmurQSOTest.Items
             s = string.Concat(s, string.Format("QSO {0,-" + ContestFile.Width[0] + "} : ", Raw.Number));
 
             // первые 6 полей.
-            for (int i = 1; i < 7; i++) {
+            for (int i = 1; i < 7; i++)
+            {
                 s = string.Concat(s, string.Format("{0,-" + ContestFile.Width[i] + "} ", Util.GetProperty(this.Raw, type.GetProperties()[i].Name).ToString()));
             }
 
@@ -257,6 +267,20 @@ namespace AmurQSOTest.Items
             //s = string.Concat(s, string.Format(" {0:10} ", Counters.ErrorType.ToString()));
 
             return s;
+        }
+
+        public string Dump()
+        {
+            string text = ToReport(false);
+            string s = "";
+            s = string.Concat(s, string.Format(" ok:{0} ", Counters.OK ? "1" : "0"));
+            s = string.Concat(s, string.Format(" err:{0} ", Counters.ErrorOnCheck ? "1" : "0"));
+            s = string.Concat(s, string.Format(" {0:10} ", Counters.ErrorType.ToString()));
+            int prevnum = 0;
+            if (LinkedQSO != null)
+                prevnum = LinkedQSO.Raw.Number;
+            s = string.Concat(s, string.Format(" prev:{0:4} ", prevnum.ToString()));
+            return string.Concat(text, s);
         }
     }
 }

@@ -59,9 +59,12 @@ namespace AmurQSOTest.Items
             {
                 file.PreCalculate();
             }
-            foreach (ContestFile file in this.Files)
+            for (int i = 0; i < 10; i++)
             {
-                file.Calculate();
+                foreach (ContestFile file in this.Files)
+                {
+                    file.Calculate();
+                }
             }
         }
 
