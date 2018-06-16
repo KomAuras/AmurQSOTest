@@ -156,56 +156,37 @@ namespace AmurQSOTest.Items
                         QSOList list = items.GetPreviousInTour(item, true);
                         if (list.Count > 0)
                         {
-                            if (Call == "UB0CAC")
-                                if (list.Count > 1)
-                                {
-                                    Console.WriteLine(item.Dump());
-                                    foreach (QSO l in list)
-                                    {
-                                        Console.WriteLine(l.Dump());
-                                    }
-                                    Console.WriteLine("================================================================");
-                                    //Console.ReadKey();
-                                }
                             QSO r = list[0];
-                            // если предыдущая QSO не подтверждена
-                            // и текущая дубль
-                            if (item.LinkedQSO != null &&
-                                !item.LinkedQSO.Counters.OK &&
-                                item.Counters.ErrorOnCheck &&
-                                item.Counters.ErrorType == ErrorType.doublebymode)
-                            {
-                                // обнуляем флаг что текущая QSO дубль
-                                item.Counters.SetError(ErrorType.clear);
-                                item.LinkedQSO = null;
-                                if (Call == "UB0CAC")
-                                    Console.WriteLine("un-link");
-                            }
                             // если предыдущая QSO подтверждена 
-                            // или связи с предыдущей QSO еще нет
-                            else if ((item.LinkedQSO != null &&
-                                item.LinkedQSO.Counters.OK) || (
-                                item.LinkedQSO == null &&
-                                !item.Counters.ErrorOnCheck))
+                            if (r.Counters.OK || r.Counters.ErrorType == ErrorType.doublebymode || r.Counters.ErrorType == ErrorType.doublebytime)
                             {
+                                item.Counters.OK = false;
                                 item.Errors.Clear();
                                 item.Errors.Add("Subtour double [mode] with QSO: " + r.Raw.Number);
                                 item.Counters.SetError(ErrorType.doublebymode);
                                 item.LinkedQSO = r;
-                                if (Call == "UB0CAC")
-                                    Console.WriteLine("link");
                             }
-                            if (Call == "UB0CAC")
-                                if (list.Count > 1)
-                                {
-                                    Console.WriteLine(item.Dump());
-                                    foreach (QSO l in list)
-                                    {
-                                        Console.WriteLine(l.Dump());
-                                    }
-                                    Console.WriteLine("================================================================");
-                                    //Console.ReadKey();
-                                }
+                            // если предыдущая QSO не подтверждена и она не предыдущий дубль то текущая QSO не может быть дублем
+                            else if (r.Counters.OK == false && r.Counters.ErrorType != ErrorType.doublebymode && r.Counters.ErrorType != ErrorType.doublebytime)
+                            {
+                                // обнуляем флаг что текущая QSO дубль
+                                item.Counters.OK = false;
+                                item.Errors.Clear();
+                                item.Counters.SetError(ErrorType.clear);
+                                item.LinkedQSO = null;
+                            }
+                            #region debug
+                            //if (list.Count > 1)
+                            //{
+                            //    Console.WriteLine("=2===============================================================");
+                            //    Console.WriteLine(item.Dump());
+                            //    foreach (QSO l in list)
+                            //    {
+                            //        Console.WriteLine(l.Dump());
+                            //    }
+                            //    //Console.ReadKey();
+                            //}
+                            #endregion 
                         }
                     }
 
@@ -218,8 +199,10 @@ namespace AmurQSOTest.Items
                         if (list.Count > 0)
                         {
                             QSO r = list[0];
-                            if (previous_callsign == item.Raw.RecvCall && r.Counters.Offset < Config.repeat_call)
+                            if (previous_callsign == item.Raw.RecvCall && r.Counters.Offset < Config.repeat_call && r.Counters.OK)
                             {
+                                item.Counters.OK = false;
+                                item.Errors.Clear();
                                 item.Errors.Add("Subtour double [time] with QSO: " + r.Raw.Number);
                                 item.Counters.SetError(ErrorType.doublebytime);
                                 item.LinkedQSO = r;
@@ -564,6 +547,12 @@ namespace AmurQSOTest.Items
                     item.Counters.ByLocator = Math.Round(item.Counters.Distantion * Config.ContestBandPoints.GetPoints(item.Feq), 0);
                     item.Counters.Total = item.Counters.ByLocator;
                     OKQty++;
+                }
+                else
+                {
+                    item.Counters.Distantion = 0;
+                    item.Counters.ByLocator = 0;
+                    item.Counters.Total = 0;
                 }
                 TotalPoints += item.Counters.Total;
                 AllQty++;
