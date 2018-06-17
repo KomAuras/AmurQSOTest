@@ -22,8 +22,8 @@ namespace AmurQSOTest.Items
                         l.Raw.RecvCall == this[i].Raw.RecvCall &&
                         l.Counters.SubTour == this[i].Counters.SubTour &&
                         l.Feq == this[i].Feq &&
-                        l.Raw.Number != this[i].Raw.Number &&
-                        this[i].DateTime < l.DateTime)
+                        this[i].Raw.Number < l.Raw.Number &&
+                        this[i].DateTime <= l.DateTime)
                     {
                         if (!OnlySameMode ||
                             (OnlySameMode && (

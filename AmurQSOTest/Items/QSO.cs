@@ -145,7 +145,7 @@ namespace AmurQSOTest.Items
             }
             if (ContestFile.PreviousQSODatetTime > DateTime)
             {
-                CheckErrors.Add("BAD DateTime [" + Raw.Date.Trim() + " " + Raw.Time.Trim() + "]");
+                CheckErrors.Add("The order of DateTime is broken");
                 Counters.Filtered = true;
             }
             else

@@ -125,8 +125,8 @@ namespace AmurQSOTest.Items
         /// </summary>
         public void Calculate()
         {
-            Calculate_Double();
             Calculate_Loop();
+            Calculate_Double();
             Calculate_LastStand();
             Calculate_Points();
         }
@@ -139,10 +139,15 @@ namespace AmurQSOTest.Items
             string previous_callsign = "";
             foreach (QSO item in items)
             {
+                //if (Call == "RN0CW" && item.Raw.Number == 32)
+                //{
+                //    Console.WriteLine(item.Dump());
+                //}
                 if (!item.Counters.Filtered && (!item.Counters.ErrorOnCheck ||
                     item.Counters.ErrorOnCheck &&
                     (item.Counters.ErrorType == ErrorType.doublebymode ||
-                    item.Counters.ErrorType == ErrorType.doublebytime))
+                    item.Counters.ErrorType == ErrorType.doublebytime ||
+                    item.Counters.ErrorType == ErrorType.similarqso))
                     )
                 {
                     /// TODO: решить тут все вопросы по проверкам
@@ -301,11 +306,11 @@ namespace AmurQSOTest.Items
                         l.Raw.SendCall == r.Raw.RecvCall &&
                         l.Feq == r.Feq)
                     {
-
                         l.Errors.Add(BuildErrorStr(l, r));
                         l.Counters.SetError(ErrorType.similarqso);
                         l.LinkedQSO = r;
-                        r.LinkedQSO = l;
+                        if (!r.Counters.ErrorOnCheck)
+                            r.LinkedQSO = l;
                         break;
                     }
 
@@ -595,6 +600,10 @@ namespace AmurQSOTest.Items
                 {
                     s = string.Concat(s, string.Join(", ", q.Errors));
                 }
+                if (q.CheckErrors.Count > 0)
+                {
+                    s = string.Concat(s, string.Join(", ", q.CheckErrors));
+                }
                 fw.WriteLine(s, Encoding.GetEncoding("Windows-1251"));
             }
             fw.WriteLine("Total points: " + TotalPoints, Encoding.GetEncoding("Windows-1251"));
@@ -630,6 +639,10 @@ namespace AmurQSOTest.Items
                     if (q.Errors.Count > 0)
                     {
                         s = string.Concat(s, string.Join(", ", q.Errors));
+                    }
+                    if (q.CheckErrors.Count > 0)
+                    {
+                        s = string.Concat(s, string.Join(", ", q.CheckErrors));
                     }
                     fw.WriteLine(s, Encoding.GetEncoding("Windows-1251"));
                     in_ubn++;
